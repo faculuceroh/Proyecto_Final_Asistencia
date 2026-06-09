@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis materias · Asistencia QR</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="../assets/img/logo.png" alt="Logo" />
+        <div><div class="name">Asistencia QR</div><div class="sub">Portal Profesor</div></div>
+      </div>
+      <nav class="sidebar-nav">
+        <span class="nav-label">Principal</span>
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> Mis clases</a>
+        <a href="materias.html" class="active"><i class="fa-solid fa-book"></i> Mis materias</a>
+        <a href="historial.html"><i class="fa-solid fa-clock-rotate-left"></i> Historial</a>
+        <span class="nav-label">Cuenta</span>
+        <a href="perfil.html"><i class="fa-solid fa-user"></i> Mi perfil</a>
+        <a href="../index.html"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar">MR</div>
+        <div class="meta"><div class="u-name">Prof. Marta Ríos</div><div class="u-role">Legajo 10245</div></div>
+        <a href="../index.html" class="logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" data-sidebar-backdrop></div>
+
+    <div class="app-main">
+      <header class="topbar">
+        <button class="hamburger" data-sidebar-toggle aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
+        <div class="page-title">Mis materias <small>Creá y gestioná las materias que dictás</small></div>
+      </header>
+
+      <main class="app-content">
+        <div class="admin-grid" style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start">
+          <!-- Form de alta -->
+          <div class="card" style="padding:24px">
+            <h3 style="font-size:1.1rem;margin-bottom:4px">Nueva materia</h3>
+            <p class="text-muted" style="font-size:0.88rem;margin-bottom:18px">Quedará asignada a tu nombre.</p>
+
+            <form id="materiaForm" data-url="../api/crear_materia.html">
+              <div class="field"><label>Nombre de la materia</label><input class="input" name="nombre" placeholder="Ej: Programación II" required /></div>
+              <div class="form-grid">
+                <div class="field"><label>Código</label><input class="input" name="codigo" placeholder="Ej: PRG2" /></div>
+                <div class="field"><label>Curso</label>
+                  <select class="select" name="curso"><option>1° A</option><option>1° B</option><option>2° A</option><option>2° B</option></select>
+                </div>
+              </div>
+              <div class="field"><label>Modalidad</label>
+                <select class="select" name="modalidad"><option value="presencial">Presencial</option><option value="virtual">Virtual</option></select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block mt-1"><i class="fa-solid fa-plus"></i> Crear materia</button>
+            </form>
+          </div>
+
+          <!-- Listado -->
+          <div class="card table-card">
+            <div class="toolbar" style="padding:16px 16px 0;margin:0">
+              <h3 style="font-size:1.05rem">Clases que dictás</h3>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table" id="materiasTable">
+                <thead><tr><th>Materia</th><th>Código</th><th>Curso</th><th>Alumnos</th><th>Modalidad</th><th></th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div class="cell-name">Programación II</div></td><td>PRG2</td><td>1° B</td>
+                    <td><span class="badge badge-accent">30</span></td>
+                    <td><span class="badge badge-accent">Presencial</span></td>
+                    <td><a href="historial.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-users"></i> Ver clase</a></td>
+                  </tr>
+                  <tr>
+                    <td><div class="cell-name">Base de Datos</div></td><td>BDD</td><td>2° A</td>
+                    <td><span class="badge badge-accent">28</span></td>
+                    <td><span class="badge badge-muted">Virtual</span></td>
+                    <td><a href="historial.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-users"></i> Ver clase</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    App.qs('#materiaForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const f = new FormData(this);
+      const nombre = f.get('nombre').trim();
+      if (!nombre) return;
+      // Demo (sin backend): agrega la fila directo. En el .php se hace POST real.
+      const modal = f.get('modalidad') === 'virtual'
+        ? '<span class="badge badge-muted">Virtual</span>'
+        : '<span class="badge badge-accent">Presencial</span>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><div class="cell-name">${nombre}</div></td>
+        <td>${f.get('codigo') || '—'}</td><td>${f.get('curso')}</td>
+        <td><span class="badge badge-muted">0</span></td><td>${modal}</td>
+        <td><a href="historial.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-users"></i> Ver clase</a></td>`;
+      App.qs('#materiasTable tbody').prepend(tr);
+      App.toast('Materia "' + nombre + '" creada.', 'success');
+      this.reset();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi perfil · Asistencia QR</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="../assets/img/logo.png" alt="Logo" />
+        <div><div class="name">Asistencia QR</div><div class="sub">Portal Alumno</div></div>
+      </div>
+      <nav class="sidebar-nav">
+        <span class="nav-label">Principal</span>
+        <a href="dashboard.html"><i class="fa-solid fa-house"></i> Inicio</a>
+        <a href="materias.html"><i class="fa-solid fa-book"></i> Mis materias</a>
+        <a href="escanear.html"><i class="fa-solid fa-qrcode"></i> Escanear QR</a>
+        <span class="nav-label">Cuenta</span>
+        <a href="perfil.html" class="active"><i class="fa-solid fa-user"></i> Mi perfil</a>
+        <a href="../index.html"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar">LG</div>
+        <div class="meta"><div class="u-name">Lucía Gómez</div><div class="u-role">Legajo 20451 · 1° B</div></div>
+        <a href="../index.html" class="logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" data-sidebar-backdrop></div>
+
+    <div class="app-main">
+      <header class="topbar">
+        <button class="hamburger" data-sidebar-toggle aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
+        <div class="page-title">Mi perfil</div>
+      </header>
+
+      <main class="app-content">
+        <div class="card profile-card">
+          <div class="profile-head">
+            <div class="avatar-lg">LG</div>
+            <div>
+              <h2>Lucía Gómez</h2>
+              <div class="role-line"><i class="fa-solid fa-user-graduate"></i> Alumno · 1° B · Legajo 20451</div>
+            </div>
+          </div>
+          <div class="profile-body">
+            <form id="perfilForm">
+              <div class="form-grid">
+                <div class="field"><label>Nombre</label><input class="input" value="Lucía" /></div>
+                <div class="field"><label>Apellido</label><input class="input" value="Gómez" /></div>
+                <div class="field"><label>Legajo</label><input class="input" value="20451" disabled /></div>
+                <div class="field"><label>Email</label><input class="input" type="email" value="lucia.gomez@instituto.edu" /></div>
+              </div>
+
+              <h3 style="font-size:1rem;margin:14px 0 12px">Seguridad</h3>
+              <div class="field"><label>Nueva contraseña</label><input class="input" type="password" placeholder="Dejar vacío para no cambiar" /></div>
+
+              <button type="submit" class="btn btn-primary mt-1"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    App.qs('#perfilForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.toast('Perfil actualizado.', 'success');
+    });
+  </script>
+</body>
+</html>

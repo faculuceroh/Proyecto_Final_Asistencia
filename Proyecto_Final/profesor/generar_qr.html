@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tomar asistencia · Asistencia QR</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/qr.css" />
+</head>
+<body>
+  <div class="qr-screen">
+    <header class="qr-topbar">
+      <a href="dashboard.html" class="back" title="Volver"><i class="fa-solid fa-arrow-left"></i></a>
+      <div class="qr-clase">
+        <h1 id="qrMateria">Programación II</h1>
+        <p id="qrSub">1° B · En curso</p>
+      </div>
+      <div class="qr-topbar-right">
+        <span class="badge badge-accent" id="modalidadBadge">Presencial</span>
+        <span class="badge badge-warning">En curso</span>
+      </div>
+    </header>
+
+    <div class="qr-body">
+      <!-- Panel del QR -->
+      <section class="qr-panel">
+        <p class="qr-hint">Los alumnos escanean este código con su celular para registrar su <strong>entrada</strong> o <strong>salida</strong>.</p>
+
+        <div class="qr-mode" role="radiogroup" aria-label="Tipo de QR">
+          <label class="mode-opt opt-in">
+            <input type="radio" name="qrMode" value="entrada" checked />
+            <span><i class="fa-solid fa-right-to-bracket"></i> Entrada</span>
+          </label>
+          <label class="mode-opt opt-out">
+            <input type="radio" name="qrMode" value="salida" />
+            <span><i class="fa-solid fa-right-from-bracket"></i> Salida</span>
+          </label>
+        </div>
+
+        <div class="qr-canvas-wrap" id="qrCanvas"
+             data-clase-id="1" data-total="30"
+             data-scan-base="../alumno/escanear.html"></div>
+
+        <div class="qr-countdown" id="countdown">
+          <span class="ring">
+            <svg width="26" height="26" viewBox="0 0 26 26">
+              <circle class="track" cx="13" cy="13" r="11"></circle>
+              <circle class="bar" id="ringBar" cx="13" cy="13" r="11"></circle>
+            </svg>
+          </span>
+          <span>Se renueva en <strong id="countdownLabel">00:30</strong></span>
+        </div>
+
+        <div>
+          <button class="btn btn-danger btn-lg" id="finishBtn">
+            <i class="fa-solid fa-stop"></i> Finalizar asistencia
+          </button>
+        </div>
+      </section>
+
+      <!-- Panel lateral -->
+      <aside class="qr-side">
+        <div class="presence-card">
+          <div class="big-count"><span id="presentNow" data-start="0">0</span> <span class="total">/ 30</span></div>
+          <div class="label"><span id="presenceLabel">entradas registradas</span></div>
+          <div class="progress"><span id="presentBar" style="width:0%"></span></div>
+
+          <div class="live-list" id="liveList"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- QRCode.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <!-- Aplica las opciones elegidas en el pop-up (materia, modalidad, tipo) ANTES de generar el QR -->
+  <script>
+    (function () {
+      const p = new URLSearchParams(location.search);
+      const materia = p.get('materia');
+      const grupo = p.get('grupo');
+      const modalidad = p.get('modalidad');
+      const tipo = p.get('tipo');
+      const clase = p.get('clase');
+      const aula = p.get('aula');
+
+      if (materia) document.getElementById('qrMateria').textContent = materia;
+      if (clase) document.getElementById('qrCanvas').dataset.claseId = clase;
+
+      // Subtítulo: "1° B · Aula 204 · En curso" (presencial) o "2° A · Virtual · En curso"
+      const lugar = modalidad === 'virtual' ? 'Virtual' : (aula || 'Presencial');
+      const partes = [grupo, lugar, 'En curso'].filter(Boolean);
+      document.getElementById('qrSub').textContent = partes.join(' · ');
+
+      if (modalidad) {
+        const b = document.getElementById('modalidadBadge');
+        const esVirtual = modalidad === 'virtual';
+        b.textContent = esVirtual ? 'Virtual' : 'Presencial';
+        b.className = 'badge ' + (esVirtual ? 'badge-muted' : 'badge-accent');
+      }
+      // Pre-seleccionar Entrada/Salida según el pop-up (antes de que corra qr-display.js)
+      if (tipo === 'salida') {
+        const r = document.querySelector('input[name="qrMode"][value="salida"]');
+        if (r) r.checked = true;
+      }
+    })();
+  </script>
+  <script src="../assets/js/qr-display.js"></script>
+</body>
+</html>
