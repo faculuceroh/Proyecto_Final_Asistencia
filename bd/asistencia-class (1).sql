@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 06-06-2026 a las 13:17:48
+-- Tiempo de generación: 09-06-2026 a las 14:16:22
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `asistencia-class`
 --
+CREATE DATABASE IF NOT EXISTS `asistencia-class` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
+USE `asistencia-class`;
 
 -- --------------------------------------------------------
 
