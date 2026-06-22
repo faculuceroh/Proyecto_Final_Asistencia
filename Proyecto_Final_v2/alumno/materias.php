@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 require_auth(['alumno']);
@@ -69,6 +69,7 @@ $curso = $stmt->fetchColumn() ?? '';
       <a href="dashboard.php"><i class="fa-solid fa-house"></i> Inicio</a>
       <a href="materias.php" class="active"><i class="fa-solid fa-book"></i> Mis materias</a>
       <a href="escanear.php"><i class="fa-solid fa-qrcode"></i> Escanear QR</a>
+      <a href="historial.php"><i class="fa-solid fa-clock-rotate-left"></i> Mi asistencia</a>
       <span class="nav-label">Cuenta</span>
       <a href="perfil.php"><i class="fa-solid fa-user"></i> Mi perfil</a>
       <a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
@@ -136,7 +137,7 @@ $curso = $stmt->fetchColumn() ?? '';
             </div>
           <?php endif; ?>
           <div class="subject-foot">
-            <a href="dashboard.php#historial" class="btn btn-ghost btn-sm">
+            <a href="historial.php?materia_id=<?= $m['id'] ?>" class="btn btn-ghost btn-sm">
               <i class="fa-solid fa-clock-rotate-left"></i> Ver asistencia
             </a>
           </div>
@@ -150,3 +151,4 @@ $curso = $stmt->fetchColumn() ?? '';
 <script src="../assets/js/utils.js"></script>
 </body>
 </html>
+

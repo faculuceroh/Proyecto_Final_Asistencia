@@ -15,21 +15,40 @@ $asistencia_prom  = $pdo->query(
     "SELECT ROUND(SUM(estado IN ('presente','tardanza')) / NULLIF(COUNT(*),0) * 100, 1) FROM asistencias"
 )->fetchColumn() ?? 0;
 
-// ── Tabla de usuarios (paginada) ─────────────────────────────
-$por_pagina     = 10;
-$pagina         = max(1, (int) ($_GET['pagina'] ?? 1));
-$offset         = ($pagina - 1) * $por_pagina;
-$total_usuarios = (int) $pdo->query("SELECT COUNT(*) FROM usuarios")->fetchColumn();
+// ── Tabla de usuarios (paginada + búsqueda) ──────────────────
+$por_pagina = 10;
+$pagina     = max(1, (int) ($_GET['pagina'] ?? 1));
+$buscar     = trim($_GET['buscar'] ?? '');
+$offset     = ($pagina - 1) * $por_pagina;
+
+if ($buscar) {
+    $like = '%' . $buscar . '%';
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?");
+    $stmt->execute([$like, $like, $like]);
+} else {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM usuarios");
+}
+$total_usuarios = (int) $stmt->fetchColumn();
 $total_paginas  = (int) ceil($total_usuarios / $por_pagina);
 
-$stmt = $pdo->prepare(
-    "SELECT id, legajo, nombre, apellido, rol, activo
-     FROM usuarios ORDER BY created_at DESC
-     LIMIT :lim OFFSET :off"
-);
-$stmt->bindValue(':lim', $por_pagina, PDO::PARAM_INT);
-$stmt->bindValue(':off', $offset,     PDO::PARAM_INT);
-$stmt->execute();
+if ($buscar) {
+    $like = '%' . $buscar . '%';
+    $stmt = $pdo->prepare(
+        "SELECT id, legajo, nombre, apellido, rol, activo
+         FROM usuarios
+         WHERE nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?
+         ORDER BY apellido, nombre
+         LIMIT ? OFFSET ?"
+    );
+    $stmt->execute([$like, $like, $like, $por_pagina, $offset]);
+} else {
+    $stmt = $pdo->prepare(
+        "SELECT id, legajo, nombre, apellido, rol, activo
+         FROM usuarios ORDER BY created_at DESC
+         LIMIT ? OFFSET ?"
+    );
+    $stmt->execute([$por_pagina, $offset]);
+}
 $usuarios = $stmt->fetchAll();
 
 // ── Helpers de presentación ───────────────────────────────────
@@ -136,7 +155,8 @@ $iniciales = strtoupper(substr($partes[0], 0, 1) . substr($partes[1] ?? '', 0, 1
             <h3 style="font-size:1.05rem">Usuarios</h3>
             <div class="spacer"></div>
             <input class="input" type="search" id="buscarUsuario"
-                   placeholder="Buscar por nombre o legajo…" style="min-width:200px" />
+                   placeholder="Buscar por nombre o legajo…" style="min-width:200px"
+                   value="<?= htmlspecialchars($buscar) ?>" />
           </div>
           <div class="table-scroll">
             <table class="data-table">
@@ -183,22 +203,30 @@ $iniciales = strtoupper(substr($partes[0], 0, 1) . substr($partes[1] ?? '', 0, 1
           </div>
 
           <!-- Paginación -->
+          <?php
+            $qs = $buscar ? '&buscar=' . urlencode($buscar) : '';
+            $mostrar_desde = $total_usuarios > 0 ? $offset + 1 : 0;
+          ?>
           <div class="pagination">
             <span class="pg-info">
-              Mostrando <?= $offset + 1 ?>–<?= min($offset + $por_pagina, $total_usuarios) ?>
-              de <?= $total_usuarios ?>
+              <?php if ($buscar): ?>
+                <?= $total_usuarios ?> resultado(s) para "<?= htmlspecialchars($buscar) ?>"
+              <?php else: ?>
+                Mostrando <?= $mostrar_desde ?>–<?= min($offset + $por_pagina, $total_usuarios) ?>
+                de <?= $total_usuarios ?>
+              <?php endif; ?>
             </span>
             <div class="pg-controls">
-              <a href="?pagina=<?= max(1, $pagina - 1) ?>"
+              <a href="?pagina=<?= max(1, $pagina - 1) . $qs ?>"
                  class="pg-btn <?= $pagina <= 1 ? 'disabled' : '' ?>">
                 <i class="fa-solid fa-chevron-left"></i>
               </a>
               <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                <a href="?pagina=<?= $i ?>" class="pg-btn <?= $i === $pagina ? 'active' : '' ?>">
+                <a href="?pagina=<?= $i . $qs ?>" class="pg-btn <?= $i === $pagina ? 'active' : '' ?>">
                   <?= $i ?>
                 </a>
               <?php endfor; ?>
-              <a href="?pagina=<?= min($total_paginas, $pagina + 1) ?>"
+              <a href="?pagina=<?= min($total_paginas, $pagina + 1) . $qs ?>"
                  class="pg-btn <?= $pagina >= $total_paginas ? 'disabled' : '' ?>">
                 <i class="fa-solid fa-chevron-right"></i>
               </a>
@@ -319,12 +347,17 @@ $iniciales = strtoupper(substr($partes[0], 0, 1) . substr($partes[1] ?? '', 0, 1
       });
   });
 
-  // ── Búsqueda en tabla (client-side) ──
+  // ── Búsqueda server-side (con debounce) ──
+  let searchTimer;
   App.qs('#buscarUsuario').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    App.qsa('#tablaUsuarios tr').forEach(function (tr) {
-      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
+    clearTimeout(searchTimer);
+    const q = this.value;
+    searchTimer = setTimeout(function () {
+      const url = new URL(window.location.href);
+      url.searchParams.set('buscar', q);
+      url.searchParams.set('pagina', '1');
+      window.location.href = url.toString();
+    }, 400);
   });
 </script>
 </body>

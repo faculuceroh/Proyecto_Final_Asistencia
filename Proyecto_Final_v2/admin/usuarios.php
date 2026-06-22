@@ -40,12 +40,9 @@ $stmt = $pdo->prepare(
     "SELECT u.id, u.legajo, u.nombre, u.apellido, u.rol, u.activo
      FROM usuarios u $where
      ORDER BY u.created_at DESC
-     LIMIT :lim OFFSET :off"
+     LIMIT ? OFFSET ?"
 );
-foreach ($params as $i => $v) $stmt->bindValue($i + 1, $v);
-$stmt->bindValue(':lim', $por_pag, PDO::PARAM_INT);
-$stmt->bindValue(':off', $offset,  PDO::PARAM_INT);
-$stmt->execute();
+$stmt->execute(array_merge($params, [$por_pag, $offset]));
 $usuarios = $stmt->fetchAll();
 
 // ── Helpers ───────────────────────────────────────────────────

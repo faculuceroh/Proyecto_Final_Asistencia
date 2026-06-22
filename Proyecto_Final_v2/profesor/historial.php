@@ -70,12 +70,9 @@ $stmt = $pdo->prepare(
      JOIN materias m ON m.id = c.materia_id
      $where
      ORDER BY c.fecha DESC, u.apellido
-     LIMIT :lim OFFSET :off"
+     LIMIT ? OFFSET ?"
 );
-foreach ($params as $i => $v) $stmt->bindValue($i + 1, $v);
-$stmt->bindValue(':lim', $por_pag, PDO::PARAM_INT);
-$stmt->bindValue(':off', $offset,  PDO::PARAM_INT);
-$stmt->execute();
+$stmt->execute(array_merge($params, [$por_pag, $offset]));
 $filas = $stmt->fetchAll();
 
 // URL export con filtros actuales

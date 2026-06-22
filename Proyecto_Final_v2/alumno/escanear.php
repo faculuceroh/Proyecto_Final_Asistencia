@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../includes/auth.php';
 require_auth(['alumno']);
 
@@ -72,3 +72,4 @@ $iniciales = strtoupper(substr($partes[0],0,1).substr($partes[1]??'',0,1));
   <script src="../assets/js/qr-scanner.js"></script>
 </body>
 </html>
+

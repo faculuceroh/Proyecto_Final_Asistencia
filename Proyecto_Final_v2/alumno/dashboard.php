@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 require_auth(['alumno']);
@@ -100,7 +100,7 @@ $alumno = $stmt->fetch();
       <a href="dashboard.php" class="active"><i class="fa-solid fa-house"></i> Inicio</a>
       <a href="materias.php"><i class="fa-solid fa-book"></i> Mis materias</a>
       <a href="escanear.php"><i class="fa-solid fa-qrcode"></i> Escanear QR</a>
-      <a href="dashboard.php#historial"><i class="fa-solid fa-clock-rotate-left"></i> Mi asistencia</a>
+      <a href="historial.php"><i class="fa-solid fa-clock-rotate-left"></i> Mi asistencia</a>
       <span class="nav-label">Cuenta</span>
       <a href="perfil.php"><i class="fa-solid fa-user"></i> Mi perfil</a>
       <a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
@@ -238,3 +238,4 @@ $alumno = $stmt->fetch();
 <script src="../assets/js/utils.js"></script>
 </body>
 </html>
+

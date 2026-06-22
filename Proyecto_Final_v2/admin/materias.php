@@ -18,7 +18,7 @@ $total_profesores = (int) $pdo->query("SELECT COUNT(DISTINCT profesor_id) FROM m
 $total_cursos     = (int) $pdo->query("SELECT COUNT(DISTINCT curso) FROM materias WHERE activo=1")->fetchColumn();
 
 // ── Cursos disponibles para el filtro ────────────────────────
-$cursos_lista = $pdo->query("SELECT DISTINCT curso FROM materias WHERE activo=1 ORDER BY curso")->fetchAll(PDO::FETCH_COLUMN);
+$cursos_lista = $pdo->query("SELECT nombre FROM cursos ORDER BY nombre")->fetchAll(PDO::FETCH_COLUMN);
 
 // ── Consulta de materias ──────────────────────────────────────
 $where  = 'WHERE m.activo = 1';
@@ -50,12 +50,9 @@ $stmt = $pdo->prepare(
      $where
      GROUP BY m.id
      ORDER BY m.nombre ASC
-     LIMIT :lim OFFSET :off"
+     LIMIT ? OFFSET ?"
 );
-foreach ($params as $i => $v) $stmt->bindValue($i + 1, $v);
-$stmt->bindValue(':lim', $por_pag, PDO::PARAM_INT);
-$stmt->bindValue(':off', $offset,  PDO::PARAM_INT);
-$stmt->execute();
+$stmt->execute(array_merge($params, [$por_pag, $offset]));
 $materias = $stmt->fetchAll();
 
 $partes    = explode(' ', $_SESSION['nombre']);
