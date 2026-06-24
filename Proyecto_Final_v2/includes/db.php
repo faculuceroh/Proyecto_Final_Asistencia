@@ -22,3 +22,22 @@ function getPDO(): PDO
     }
     return $pdo;
 }
+
+// Autoloader para MVC (carga automática de Modelos y Controladores)
+spl_autoload_register(function ($class_name) {
+    $base_dir = dirname(__DIR__) . '/';
+    
+    // Buscar en models/
+    $model_file = $base_dir . 'models/' . $class_name . '.php';
+    if (file_exists($model_file)) {
+        require_once $model_file;
+        return;
+    }
+    
+    // Buscar en controller/
+    $controller_file = $base_dir . 'controller/' . $class_name . '.php';
+    if (file_exists($controller_file)) {
+        require_once $controller_file;
+        return;
+    }
+});
