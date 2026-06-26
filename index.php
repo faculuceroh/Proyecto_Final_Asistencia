@@ -90,7 +90,7 @@ require __DIR__ . '/includes/public_header.php';
           </button>
         </div>
 
-        <a href="#" class="auth-forgot">¿Olvidaste tu contraseña?</a>
+        <a href="view/password/recupero.php" class="auth-forgot">¿Olvidaste tu contraseña?</a>
       </form>
 
       <p class="auth-foot">© 2026 Instituto · Sistema de Asistencia por QR</p>

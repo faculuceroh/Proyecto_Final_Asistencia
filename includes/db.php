@@ -1,7 +1,7 @@
 <?php
 // Credenciales de la base de datos (XAMPP por defecto: root sin contraseña)
 define('DB_HOST', 'localhost');
-define('DB_PORT', '3307');           // XAMPP de esta PC usa 3307 (no el 3306 por defecto)
+define('DB_PORT', '3306');           // XAMPP de esta PC usa 3307 (no el 3306 por defecto)
 define('DB_NAME', 'asistencia_qr');
 define('DB_USER', 'root');
 define('DB_PASS', '');
