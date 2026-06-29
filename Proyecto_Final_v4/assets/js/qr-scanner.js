@@ -118,6 +118,26 @@
   async function registrar(data) {
     show(resultView);
     resultView.className = 'scan-result';
+    resultView.innerHTML = '<div class="spinner spinner-lg" style="margin:30px auto"></div><p>Obteniendo ubicación…</p>';
+
+    // Pedir geolocalización al dispositivo
+    let lat = null, lng = null;
+    try {
+      const pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 0,
+      })
+      );
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+    } catch (err) {
+      // Si el alumno denegó el permiso o no hay GPS, lat/lng quedan null.
+      // El servidor decide si rechaza o no según geo_requerida del aula.
+      console.warn('Geolocalización no disponible:', err.message);
+    }
+
     resultView.innerHTML = '<div class="spinner spinner-lg" style="margin:30px auto"></div><p>Registrando asistencia…</p>';
 
     if (!registrarUrl) {
@@ -127,7 +147,7 @@
     try {
       const res = await App.api(registrarUrl, {
         method: 'POST',
-        body: JSON.stringify({ aula_token: data.aula_token }),
+        body: JSON.stringify({ aula_token: data.aula_token, lat, lng }),
       });
       showSuccess(res.tipo === 'salida', res.hora, res.aviso);
     } catch (err) {

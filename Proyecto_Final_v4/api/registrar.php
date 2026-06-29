@@ -7,6 +7,15 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_auth(['alumno']);
 
+// ── Función de distancia geográfica (fórmula de Haversine) ────
+function haversine(float $lat1, float $lng1, float $lat2, float $lng2): float {
+    $R    = 6371000; // radio de la Tierra en metros
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLng = deg2rad($lng2 - $lng1);
+    $a    = sin($dLat/2)**2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng/2)**2;
+    return $R * 2 * atan2(sqrt($a), sqrt(1 - $a));
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -14,17 +23,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $body       = json_decode(file_get_contents('php://input'), true) ?? [];
+
 $aula_token = trim($body['aula_token'] ?? '');
+$lat_alumno = isset($body['lat']) ? (float)$body['lat'] : null;
+$lng_alumno = isset($body['lng']) ? (float)$body['lng'] : null;
 
 if (!$aula_token) {
     http_response_code(400); echo json_encode(['message' => 'Token de aula no recibido']); exit;
 }
-
 $alumno_id = $_SESSION['usuario_id'];
 $pdo       = getPDO();
 
 // ── 1. Buscar el aula por token ───────────────────────────────
-$stmt = $pdo->prepare('SELECT id, nombre FROM aulas WHERE token = ? AND activo = 1 LIMIT 1');
+$stmt = $pdo->prepare('SELECT id, nombre, lat, lng, geo_requerida FROM aulas WHERE token = ? AND activo = 1 LIMIT 1');
 $stmt->execute([$aula_token]);
 $aula = $stmt->fetch();
 
@@ -32,6 +43,21 @@ if (!$aula) {
     http_response_code(422);
     echo json_encode(['message' => 'Código QR no válido o el aula fue desactivada.']);
     exit;
+}
+
+// ── 1b. Validar geolocalización si el aula la requiere ────────
+if ($aula['geo_requerida']) {
+    if ($lat_alumno === null || $lng_alumno === null) {
+        http_response_code(422);
+        echo json_encode(['message' => 'Tu dispositivo no envió la ubicación. Habilitá el GPS e intentá de nuevo.']);
+        exit;
+    }
+    $distancia = haversine($lat_alumno, $lng_alumno, (float)$aula['lat'], (float)$aula['lng']);
+    if ($distancia > 200) {
+        http_response_code(403);
+        echo json_encode(['message' => 'Estás demasiado lejos de la facultad (' . round($distancia) . ' m). Tenés que estar dentro del edificio para registrar la asistencia.']);
+        exit;
+    }
 }
 
 // ── 2. Buscar sesión activa en este aula ─────────────────────

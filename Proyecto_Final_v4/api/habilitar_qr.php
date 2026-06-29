@@ -38,7 +38,7 @@ if (!$clase) {
 }
 
 // Verificar que el aula existe y está activa
-$stmt = $pdo->prepare('SELECT id, nombre FROM aulas WHERE id = ? AND activo = 1 LIMIT 1');
+$stmt = $pdo->prepare('SELECT id, nombre, lat, lng, geo_requerida FROM aulas WHERE id = ? AND activo = 1 LIMIT 1');
 $stmt->execute([$aula_id]);
 $aula = $stmt->fetch();
 if (!$aula) {
@@ -82,7 +82,18 @@ if ($tipo === 'entrada') {
         $pdo->prepare('UPDATE clases SET estado = "en_curso" WHERE id = ?')->execute([$clase_id]);
     }
 
-    echo json_encode(['ok' => true, 'tipo' => 'entrada', 'aula' => $aula['nombre'], 'expira_en' => null]);
+    echo json_encode([
+        'ok'       => true,
+        'tipo'     => 'entrada',
+        'aula'     => $aula['nombre'],
+        'expira_en'=> null,
+        'geo'      => [
+                     'lat'          => $aula['lat'] ? (float)$aula['lat'] : null,
+                     'lng'          => $aula['lng'] ? (float)$aula['lng'] : null,
+                     'requerida'    => (bool)$aula['geo_requerida'],
+                     'radio_metros' => 200
+        ]
+    ]);
 
 } else {
     // tipo = 'salida'
@@ -111,5 +122,16 @@ if ($tipo === 'entrada') {
     );
     $stmt->execute([$aula_id, $clase_id, $prof_id, $expira]);
 
-    echo json_encode(['ok' => true, 'tipo' => 'salida', 'aula' => $aula['nombre'], 'expira_en' => $expira]);
+    echo json_encode([
+        'ok'       => true,
+        'tipo'     => 'salida',
+        'aula'     => $aula['nombre'],
+        'expira_en'=> $expira,
+        'geo'      => [
+            'lat'          => $aula['lat'] ? (float)$aula['lat'] : null,
+                     'lng'          => $aula['lng'] ? (float)$aula['lng'] : null,
+                     'requerida'    => (bool)$aula['geo_requerida'],
+                     'radio_metros' => 200
+        ]
+    ]);
 }
