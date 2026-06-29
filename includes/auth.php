@@ -27,10 +27,10 @@ function require_auth(array $roles = []): void
 
 function _redirigir_login(): void
 {
-    // Calcula cuántos niveles de profundidad tiene el archivo actual
-    // para armar la ruta relativa correcta al index.php del root
-    $depth = substr_count(trim($_SERVER['PHP_SELF'], '/'), '/');
-    $base  = str_repeat('../', max(0, $depth - 1));
-    header('Location: ' . $base . 'index.php');
+    $depth    = substr_count(trim($_SERVER['PHP_SELF'], '/'), '/');
+    $base     = str_repeat('../', max(0, $depth - 1));
+    $redirect = urlencode((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+                . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+    header('Location: ' . $base . 'index.php?redirect=' . $redirect);
     exit;
 }

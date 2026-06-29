@@ -244,6 +244,26 @@ h1, h2, h3, h4 {
   color: var(--c-text-faint);
   pointer-events: none;
 }
+.input-group:has(.input-toggle) {
+  display: flex;
+  align-items: center;
+}
+.input-group:has(.input-toggle) .input {
+  flex: 1;
+  padding-right: 44px;
+}
+.input-toggle {
+  flex-shrink: 0;
+  margin-left: -40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-text-faint);
+  padding: 4px 8px;
+  line-height: 1;
+  z-index: 1;
+}
+.input-toggle:hover { color: var(--c-text); }
 
 /* ---------- Badges de estado ---------- */
 .badge {

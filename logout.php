@@ -1,4 +1,6 @@
 <?php
-require_once 'includes/db.php';
-$controller = new AuthController();
-$controller->logout();
+session_start();
+session_unset();
+session_destroy();
+header('Location: index.php');
+exit;
