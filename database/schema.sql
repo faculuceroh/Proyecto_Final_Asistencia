@@ -25,7 +25,11 @@ INSERT INTO configuracion (clave, valor) VALUES
   ('periodo_activo',        '2026-1'),
   ('qr_rotacion_segundos',  '30'),
   ('tolerancia_minutos',    '10'),
-  ('notificaciones_activas','1');
+  ('notificaciones_activas','1'),
+  -- Umbrales para asistencia virtual (importación desde Teams)
+  -- porcentaje = minutos_conectado / clases.duracion_min * 100
+  ('asistencia_virtual_porcentaje_minimo',   '30'),
+  ('asistencia_virtual_porcentaje_tardanza', '70');
 
 
 -- ─────────────────────────────────────────────────────────────
