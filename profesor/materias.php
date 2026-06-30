@@ -1,5 +1,5 @@
 <?php
 require_once '../includes/auth.php';
-require_once '../includes/db.php';
-$controller = new ProfesorController();
-$controller->materias();
+require_auth(['profesor', 'admin']);
+header('Location: dashboard.php');
+exit;

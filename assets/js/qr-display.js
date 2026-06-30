@@ -192,7 +192,7 @@
       if (!finalizarUrl) {
         // Demo
         App.toast('Asistencia finalizada. ' + presentes + ' presentes registrados.', 'success', { title: 'Cerrada' });
-        setTimeout(() => (window.location.href = 'historial.html'), 1200);
+        setTimeout(() => (window.location.href = 'historial.php'), 1200);
         return;
       }
 
@@ -206,7 +206,7 @@
           presentes + ' presentes · ' + (data.ausentes || 0) + ' ausentes registrados.',
           'success', { title: 'Clase finalizada' }
         );
-        setTimeout(() => (window.location.href = 'historial.html'), 1500);
+        setTimeout(() => (window.location.href = 'historial.php'), 1500);
       })
       .catch(function (err) {
         App.toast(err.message, 'error');

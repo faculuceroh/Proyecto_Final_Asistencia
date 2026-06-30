@@ -1,9 +1,11 @@
 <?php
+require_once __DIR__ . '/../includes/db.php';
 
 class BaseModel {
-    protected $db;
-
-    public function __construct() {
-        $this->db = getPDO();
+    /**
+     * Retorna la instancia única de PDO para realizar consultas.
+     */
+    protected static function db() {
+        return getPDO();
     }
 }

@@ -32,10 +32,10 @@ $nav_active = $nav_active ?? '';
   <!-- ===== Header ===== -->
   <header class="site-header">
     <div class="container">
-      <a class="site-brand" href="index.php">
-        <img src="assets/img/scan-utn.png" alt="SCAN UTN" />
+      <a class="site-brand" href="index.php" aria-label="Volver al inicio">
+        <img src="assets/img/scan-utn.png" alt="Logo de Asistencia QR - UTN Haedo" width="160" height="64" />
       </a>
-      <nav class="site-nav">
+      <nav class="site-nav" aria-label="Navegación principal">
         <a href="index.php"<?php echo $nav_active === 'inicio' ? ' class="is-active"' : ''; ?>>Inicio</a>
         <a href="quienes-somos.php"<?php echo $nav_active === 'quienes' ? ' class="is-active"' : ''; ?>>Quiénes somos</a>
         <a href="contacto.php"<?php echo $nav_active === 'contacto' ? ' class="is-active"' : ''; ?>>Contacto</a>
