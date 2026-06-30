@@ -70,24 +70,50 @@
               <label>Legajo</label>
               <input class="input" value="<?= htmlspecialchars($user['legajo']) ?>" disabled />
             </div>
-            <div class="field">
-              <label>Email</label>
-              <input class="input" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled />
-            </div>
           </div>
+
+          <h3 style="font-size:1rem;margin-bottom:12px">Email</h3>
+          <form id="emailForm" style="margin-bottom:28px">
+            <div class="form-grid">
+              <div class="field" style="margin-bottom:0">
+                <label for="email">Email</label>
+                <div class="input-group">
+                  <i class="input-icon fa-solid fa-envelope"></i>
+                  <input class="input" type="email" id="email" name="email"
+                         value="<?= htmlspecialchars($user['email'] ?? '') ?>"
+                         placeholder="tucorreo@ejemplo.com" required />
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-1">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar email
+            </button>
+          </form>
 
           <h3 style="font-size:1rem;margin-bottom:12px">Cambiar contraseña</h3>
           <form id="passForm">
             <div class="form-grid">
               <div class="field">
                 <label>Contraseña actual</label>
-                <input class="input" type="password" name="password_actual"
-                       placeholder="Tu contraseña actual" required />
+                <div class="input-group">
+                  <i class="input-icon fa-solid fa-lock"></i>
+                  <input class="input" type="password" name="password_actual"
+                         placeholder="Tu contraseña actual" required />
+                  <button type="button" class="input-toggle" aria-label="Mostrar contraseña">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
               <div class="field">
                 <label>Nueva contraseña</label>
-                <input class="input" type="password" name="password_nueva"
-                       placeholder="Mínimo 6 caracteres" minlength="6" required />
+                <div class="input-group">
+                  <i class="input-icon fa-solid fa-lock"></i>
+                  <input class="input" type="password" name="password_nueva"
+                         placeholder="Mínimo 6 caracteres" minlength="6" required />
+                  <button type="button" class="input-toggle" aria-label="Mostrar contraseña">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
               </div>
             </div>
             <button type="submit" class="btn btn-primary mt-1">
@@ -101,6 +127,27 @@
 </div>
 <script src="../assets/js/utils.js"></script>
 <script>
+  document.querySelectorAll('.input-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const inp  = this.previousElementSibling;
+      const show = inp.type === 'password';
+      inp.type   = show ? 'text' : 'password';
+      const ico  = this.querySelector('i');
+      ico.classList.toggle('fa-eye',       !show);
+      ico.classList.toggle('fa-eye-slash',  show);
+    });
+  });
+
+  App.qs('#emailForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    App.api('../api/actualizar_email.php', {
+      method: 'POST', loader: true,
+      body: JSON.stringify({ email: this.email.value.trim() }),
+    })
+    .then(function () { App.toast('Email actualizado correctamente.', 'success'); })
+    .catch(err => App.toast(err.message, 'error'));
+  });
+
   App.qs('#passForm').addEventListener('submit', function (e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(this));

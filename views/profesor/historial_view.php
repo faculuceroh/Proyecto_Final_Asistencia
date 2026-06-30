@@ -97,7 +97,7 @@
         </div>
       </div>
 
-      <?php if ($clase['estado'] === 'pendiente'): ?>
+      <?php if ($clase['estado'] === 'pendiente' && empty($alumnos)): ?>
         <div class="card" style="padding:24px;text-align:center;color:var(--c-text-faint)">
           <i class="fa-solid fa-clock" style="font-size:2rem;margin-bottom:10px"></i>
           <p>Esta clase aún no fue tomada. La asistencia estará disponible una vez finalizada.</p>
@@ -118,6 +118,10 @@
                       <?= strtoupper(substr($a['apellido'],0,1).substr($a['nombre'],0,1)) ?>
                     </span>
                     <?= htmlspecialchars($a['apellido'].', '.$a['nombre']) ?>
+                    <?php if ($a['no_inscripto']): ?>
+                      <span class="badge badge-warning" style="font-size:0.7rem;margin-left:4px"
+                            title="Importado desde Teams, no figuraba en inscripciones">Teams</span>
+                    <?php endif; ?>
                   </div>
                 </td>
                 <td><?= htmlspecialchars($a['legajo']) ?></td>
@@ -131,7 +135,7 @@
             <?php endforeach; ?>
             <?php if (empty($alumnos)): ?>
               <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--c-text-faint)">
-                No hay alumnos inscriptos en esta materia.
+                No hay alumnos inscriptos ni asistencia registrada para esta clase.
               </td></tr>
             <?php endif; ?>
             </tbody>
