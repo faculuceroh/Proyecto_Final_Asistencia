@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../assets/css/auth.css" />
 </head>
 <body>
-  <main class="auth-wrap">
+  <main class="auth-wrap auth-wrap--center">
     <section class="auth-card">
       <div class="auth-logo">
         <img src="../assets/img/logo.png" alt="Logo institucional" />
@@ -41,7 +41,7 @@
           </button>
         </div>
 
-        <a href="../index.html" class="auth-forgot">
+        <a href="../index.php" class="auth-forgot">
           <i class="fa-solid fa-arrow-left"></i> Volver al inicio de sesión
         </a>
       </form>
