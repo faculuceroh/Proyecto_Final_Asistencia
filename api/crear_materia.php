@@ -17,6 +17,8 @@ $codigo    = trim($body['codigo']    ?? '');
 $curso     = trim($body['curso']     ?? '');
 $modalidad = in_array($body['modalidad'] ?? '', ['presencial','virtual']) ? $body['modalidad'] : 'presencial';
 $horarios  = $body['horarios'] ?? [];   // [{dia:2, hora_inicio:"18:30", hora_fin:"22:30"}, ...]
+$fecha_inicio = trim($body['fecha_inicio'] ?? '');
+$fecha_fin    = trim($body['fecha_fin']    ?? '');
 
 $pid_raw      = $body['profesor_id'] ?? 0;
 $profesor_id  = ($pid_raw === 'self')
@@ -29,6 +31,12 @@ $profesor_2_id = (int) $pid2_raw ?: null;
 if (!$nombre || !$curso) {
     http_response_code(400);
     echo json_encode(['message' => 'Nombre y curso son obligatorios']);
+    exit;
+}
+
+if ($fecha_inicio && $fecha_fin && $fecha_inicio > $fecha_fin) {
+    http_response_code(400);
+    echo json_encode(['message' => 'La fecha de inicio no puede ser posterior al fin']);
     exit;
 }
 
@@ -67,6 +75,58 @@ try {
         }
     }
 
+    // Generar clases automáticamente en el período del cuatrimestre
+    $clases_generadas = 0;
+    if ($fecha_inicio && $fecha_fin && !empty($horarios)) {
+        $stmt_h = $pdo->prepare(
+            "SELECT dia_semana, hora_inicio, hora_fin
+             FROM materia_horarios
+             WHERE materia_id = ?"
+        );
+        $stmt_h->execute([$id]);
+        $saved_horarios = $stmt_h->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!empty($saved_horarios)) {
+            $por_dia = [];
+            foreach ($saved_horarios as $sh) {
+                $por_dia[(int)$sh['dia_semana']][] = $sh;
+            }
+
+            $insert_clase = $pdo->prepare(
+                "INSERT IGNORE INTO clases (materia_id, fecha, hora_inicio, duracion_min, modalidad, estado)
+                 VALUES (?, ?, ?, ?, ?, 'pendiente')"
+            );
+
+            $current = new DateTime($fecha_inicio . ' 00:00:00');
+            $limite  = new DateTime($fecha_fin   . ' 00:00:00');
+
+            while ($current <= $limite) {
+                $dow = (int)$current->format('N'); // 1=Lun..7=Dom
+
+                if (isset($por_dia[$dow])) {
+                    foreach ($por_dia[$dow] as $sh) {
+                        [$hh, $mm] = explode(':', substr($sh['hora_inicio'], 0, 5));
+                        [$fh, $fm] = explode(':', substr($sh['hora_fin'],    0, 5));
+                        $duracion = ((int)$fh * 60 + (int)$fm) - ((int)$hh * 60 + (int)$mm);
+                        if ($duracion <= 0) $duracion = 90;
+
+                        $insert_clase->execute([
+                            $id,
+                            $current->format('Y-m-d'),
+                            substr($sh['hora_inicio'], 0, 5),
+                            $duracion,
+                            $modalidad
+                        ]);
+                        if ($insert_clase->rowCount() > 0) {
+                            $clases_generadas++;
+                        }
+                    }
+                }
+                $current->modify('+1 day');
+            }
+        }
+    }
+
     $pdo->commit();
 
     $profesor = '—';
@@ -99,14 +159,15 @@ try {
 echo json_encode([
     'ok'      => true,
     'materia' => [
-        'id'          => $id,
-        'nombre'      => $nombre,
-        'codigo'      => $codigo,
-        'curso'       => $curso,
-        'modalidad'   => $modalidad,
-        'profesor'    => $profesor,
-        'profesor_2'  => $profesor_2,
-        'dias'        => implode(', ', $horario_txt) ?: '—',
-        'hora'        => $hora_ref,
+        'id'               => $id,
+        'nombre'           => $nombre,
+        'codigo'           => $codigo,
+        'curso'            => $curso,
+        'modalidad'        => $modalidad,
+        'profesor'         => $profesor,
+        'profesor_2'       => $profesor_2,
+        'dias'             => implode(', ', $horario_txt) ?: '—',
+        'hora'             => $hora_ref,
+        'clases_generadas' => $clases_generadas
     ],
 ]);

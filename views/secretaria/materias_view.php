@@ -41,7 +41,7 @@
       <button class="hamburger" data-sidebar-toggle aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
       <div class="page-title">Materias <small>Creá materias con horario semanal fijo</small></div>
     </header>
-    <main class="app-content" style="padding:16px;overflow:hidden">
+    <main class="app-content" style="padding:16px;overflow-y:auto">
       <div class="mat-layout">
 
         <!-- ── Formulario ────────────────────────────────────── -->
@@ -51,12 +51,31 @@
             <p class="text-muted" style="font-size:0.84rem;margin-bottom:14px">Definí el horario semanal fijo para que el profesor sepa cuándo dicta.</p>
           </div>
           <div class="mat-form-scroll">
-            <form id="materiaForm" style="padding:0 20px 20px">
-              <div class="field">
+            <form id="materiaForm" class="materia-form-grid">
+              <div class="field field-name">
                 <label>Nombre de la materia</label>
                 <input class="input" name="nombre" placeholder="Ej: Programación I" required />
               </div>
-              <div class="field">
+              <div class="field field-code">
+                <label>Código <span class="text-muted">(opcional)</span></label>
+                <input class="input" name="codigo" placeholder="Ej: PRG1" />
+              </div>
+              <div class="field field-course">
+                <label>Curso</label>
+                <select class="select" name="curso">
+                  <?php foreach ($cursos as $c): ?>
+                    <option><?= htmlspecialchars($c) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="field field-modalidad">
+                <label>Modalidad</label>
+                <select class="select" name="modalidad">
+                  <option value="presencial">Presencial</option>
+                  <option value="virtual">Virtual</option>
+                </select>
+              </div>
+              <div class="field field-prof1">
                 <label>Profesor a cargo</label>
                 <select class="select" name="profesor_id">
                   <option value="">Sin asignar</option>
@@ -65,7 +84,7 @@
                   <?php endforeach; ?>
                 </select>
               </div>
-              <div class="field">
+              <div class="field field-prof2">
                 <label>Segundo profesor <span class="text-muted">(opcional)</span></label>
                 <select class="select" name="profesor_2_id">
                   <option value="">Sin asignar</option>
@@ -74,28 +93,7 @@
                   <?php endforeach; ?>
                 </select>
               </div>
-              <div class="form-grid">
-                <div class="field">
-                  <label>Código <span class="text-muted">(opcional)</span></label>
-                  <input class="input" name="codigo" placeholder="Ej: PRG1" />
-                </div>
-                <div class="field">
-                  <label>Curso</label>
-                  <select class="select" name="curso">
-                    <?php foreach ($cursos as $c): ?>
-                      <option><?= htmlspecialchars($c) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
-                <label>Modalidad</label>
-                <select class="select" name="modalidad">
-                  <option value="presencial">Presencial</option>
-                  <option value="virtual">Virtual</option>
-                </select>
-              </div>
-              <div class="field">
+              <div class="field field-days">
                 <label>Días de cursada</label>
                 <div class="days-picker">
                   <?php foreach ($dias_semana as $num => $nombre_dia): ?>
@@ -106,19 +104,72 @@
                   <?php endforeach; ?>
                 </div>
               </div>
-              <div class="form-grid">
-                <div class="field">
-                  <label>Hora inicio</label>
-                  <input class="input" type="time" name="hora_inicio" />
+              <!-- Selector de rango de horario fijo -->
+              <div class="field field-shift">
+                <label>Rango Horario</label>
+                <div class="shift-selector-container">
+                  <div class="shift-group">
+                    <span class="shift-group-label"><i class="fa-solid fa-sun" style="color: #d97706;"></i> Turno Mañana</span>
+                    <div class="shift-pills">
+                      <button type="button" class="shift-pill-btn" data-inicio="08:30" data-fin="12:30">08:30 - 12:30</button>
+                      <button type="button" class="shift-pill-btn" data-inicio="08:30" data-fin="10:30">08:30 - 10:30</button>
+                      <button type="button" class="shift-pill-btn" data-inicio="10:30" data-fin="12:30">10:30 - 12:30</button>
+                    </div>
+                  </div>
+                  
+                  <div class="shift-group" style="margin-top: 8px;">
+                    <span class="shift-group-label"><i class="fa-solid fa-moon" style="color: #4f46e5;"></i> Turno Noche</span>
+                    <div class="shift-pills">
+                      <button type="button" class="shift-pill-btn" data-inicio="18:30" data-fin="22:30">18:30 - 22:30</button>
+                      <button type="button" class="shift-pill-btn" data-inicio="18:30" data-fin="20:30">18:30 - 20:30</button>
+                      <button type="button" class="shift-pill-btn" data-inicio="20:30" data-fin="22:30">20:30 - 22:30</button>
+                    </div>
+                  </div>
+
+                  <div class="shift-group" style="margin-top: 8px;">
+                    <div class="shift-pills">
+                      <button type="button" class="shift-pill-btn" id="btnPersonalizado" style="flex: 1 1 100%;"><i class="fa-solid fa-sliders"></i> Personalizado</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="field">
-                  <label>Hora fin</label>
-                  <input class="input" type="time" name="hora_fin" />
+                <!-- Inputs manuales ocultos por defecto -->
+                <div class="form-grid" id="manualHoursGrid" style="display: none; margin-top: 8px;">
+                  <div class="field" style="margin:0;">
+                    <label>Hora inicio</label>
+                    <input class="input" type="time" name="hora_inicio" id="inputHoraInicio" />
+                  </div>
+                  <div class="field" style="margin:0;">
+                    <label>Hora fin</label>
+                    <input class="input" type="time" name="hora_fin" id="inputHoraFin" />
+                  </div>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary btn-block mt-1">
-                <i class="fa-solid fa-plus"></i> Crear materia
-              </button>
+
+              <!-- Rango del Cuatrimestre para Clases Automáticas -->
+              <div class="field field-dates">
+                <label style="font-size:0.88rem; font-weight:600; color:var(--c-primary); display:flex; align-items:center; gap:6px; margin-bottom: 2px;">
+                  <i class="fa-solid fa-calendar-days" style="color: var(--c-accent-dark);"></i> Generar Clases del Periodo
+                </label>
+                <p class="text-muted" style="font-size: 0.78rem; margin-bottom: 10px;">
+                  Ingresá las fechas para programar todas las clases del cuatrimestre automáticamente.
+                </p>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>Fecha inicio</label>
+                    <input class="input" type="date" name="fecha_inicio" id="inputFechaInicio" required />
+                  </div>
+                  <div class="field">
+                    <label>Fecha fin</label>
+                    <input class="input" type="date" name="fecha_fin" id="inputFechaFin" required />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field field-btn">
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i class="fa-solid fa-plus"></i> Crear materia
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -158,36 +209,71 @@
   </div>
 </div>
 <style>
-/* Layout dos paneles fijo en viewport */
+/* Layout top-bottom vertical */
 .mat-layout {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 16px;
-  height: calc(100vh - 96px); /* 64px topbar + 32px padding */
-}
-.mat-form-panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 16px;
+}
+.mat-form-panel {
+  display: block;
 }
 .mat-form-scroll {
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  display: block;
 }
 .mat-table-panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+}
+
+/* Grilla horizontal para el formulario */
+.materia-form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  padding: 0 20px 20px;
+}
+.materia-form-grid .field-name { grid-column: span 4; }
+.materia-form-grid .field-code { grid-column: span 2; }
+.materia-form-grid .field-course { grid-column: span 3; }
+.materia-form-grid .field-modalidad { grid-column: span 3; }
+
+.materia-form-grid .field-prof1 { grid-column: span 6; }
+.materia-form-grid .field-prof2 { grid-column: span 6; }
+
+.materia-form-grid .field-days { grid-column: span 4; }
+.materia-form-grid .field-shift { grid-column: span 4; }
+.materia-form-grid .field-dates { grid-column: span 4; }
+
+.materia-form-grid .field-btn { grid-column: span 12; }
+
+@media (max-width: 992px) {
+  .materia-form-grid .field-name { grid-column: span 12; }
+  .materia-form-grid .field-code { grid-column: span 4; }
+  .materia-form-grid .field-course { grid-column: span 4; }
+  .materia-form-grid .field-modalidad { grid-column: span 4; }
+  
+  .materia-form-grid .field-prof1 { grid-column: span 12; }
+  .materia-form-grid .field-prof2 { grid-column: span 12; }
+  
+  .materia-form-grid .field-days { grid-column: span 12; }
+  .materia-form-grid .field-shift { grid-column: span 12; }
+  .materia-form-grid .field-dates { grid-column: span 12; }
 }
 
 /* Days picker */
-.days-picker { display:flex; gap:6px; flex-wrap:wrap; }
+.days-picker { display:flex; gap:4px; flex-wrap:wrap; }
 .day-opt input { display:none; }
 .day-opt span {
-  display:inline-block; padding:5px 9px; border-radius:8px; font-size:0.8rem;
-  font-weight:600; cursor:pointer; border:2px solid var(--c-border);
-  color:var(--c-text-soft); transition:.15s;
+  display:inline-block; padding:6px 10px; border-radius:var(--r-sm); font-size:0.78rem;
+  font-weight:600; cursor:pointer; border:1px solid var(--c-border);
+  color:var(--c-text-soft); background:var(--c-surface); transition:all var(--t-fast);
+  text-align: center;
+  min-width: 45px;
+}
+.day-opt:hover span {
+  border-color: var(--c-primary-300);
+  color: var(--c-primary);
 }
 .day-opt input:checked + span {
   background:var(--c-primary); color:#fff; border-color:var(--c-primary);
@@ -203,6 +289,59 @@
 .pg-btn:hover:not(.pg-active):not(:disabled) { background:var(--c-muted-soft); }
 .pg-btn.pg-active { background:var(--c-primary); color:#fff; border-color:var(--c-primary); }
 .pg-btn:disabled { opacity:.35; cursor:default; }
+
+/* Shift selector styles */
+.shift-selector-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--c-muted-soft);
+  padding: 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border);
+}
+.shift-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.shift-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--c-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.shift-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.shift-pill-btn {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--c-text-soft);
+  transition: all var(--t-fast);
+  flex: 1 1 calc(33.333% - 4px);
+  text-align: center;
+  cursor: pointer;
+}
+.shift-pill-btn:hover {
+  border-color: var(--c-primary-300);
+  color: var(--c-primary);
+}
+.shift-pill-btn.active {
+  background: var(--c-primary);
+  color: var(--c-surface);
+  border-color: var(--c-primary);
+}
 </style>
 <script src="../assets/js/utils.js"></script>
 <script>
@@ -210,7 +349,7 @@
 
 // ── Datos de PHP → JS ─────────────────────────────────────────
 let ALL = <?= json_encode(array_values($materias)) ?>;
-const PER_PAGE = 10;
+const PER_PAGE = 5;
 let filtrado = [...ALL];
 let pagina   = 1;
 
@@ -321,6 +460,40 @@ document.getElementById('searchInput').addEventListener('input', function () {
   render();
 });
 
+// ── Control de selector de turnos/horarios fijos ─────────────────
+const inputInicio = document.getElementById('inputHoraInicio');
+const inputFin    = document.getElementById('inputHoraFin');
+const manualGrid  = document.getElementById('manualHoursGrid');
+const pills       = document.querySelectorAll('.shift-pill-btn');
+
+pills.forEach(btn => {
+  btn.addEventListener('click', function() {
+    pills.forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+
+    const isCustom = this.id === 'btnPersonalizado';
+    if (isCustom) {
+      manualGrid.style.display = 'grid';
+      inputInicio.required = true;
+      inputFin.required    = true;
+    } else {
+      manualGrid.style.display = 'none';
+      inputInicio.required = false;
+      inputFin.required    = false;
+      
+      const ini = this.getAttribute('data-inicio');
+      const fin = this.getAttribute('data-fin');
+      inputInicio.value = ini;
+      inputFin.value    = fin;
+    }
+  });
+});
+
+// Auto-seleccionar primer horario por defecto
+if (pills[0]) {
+  pills[0].click();
+}
+
 // ── Crear materia ─────────────────────────────────────────────
 document.getElementById('materiaForm').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -328,6 +501,13 @@ document.getElementById('materiaForm').addEventListener('submit', function (e) {
   const dias = fd.getAll('dias[]').map(Number);
   const hi   = fd.get('hora_inicio');
   const hf   = fd.get('hora_fin');
+  const fi   = fd.get('fecha_inicio') || '';
+  const ff   = fd.get('fecha_fin') || '';
+
+  if (dias.length === 0) {
+    App.toast('Debe seleccionar al menos un día de cursada.', 'error');
+    return;
+  }
 
   App.api('../api/crear_materia.php', {
     method: 'POST', loader: true,
@@ -339,6 +519,8 @@ document.getElementById('materiaForm').addEventListener('submit', function (e) {
       profesor_id:   fd.get('profesor_id')   || 0,
       profesor_2_id: fd.get('profesor_2_id') || 0,
       horarios:      dias.map(d => ({ dia: d, hora_inicio: hi, hora_fin: hf })),
+      fecha_inicio:  fi,
+      fecha_fin:     ff
     }),
   })
   .then(function (res) {
@@ -354,9 +536,20 @@ document.getElementById('materiaForm').addEventListener('submit', function (e) {
     filtrado = [...ALL];
     pagina = 1;
     render();
-    App.toast('Materia "' + m.nombre + '" creada.', 'success');
+    
+    let msg = 'Materia "' + m.nombre + '" creada.';
+    if (res.materia.clases_generadas > 0) {
+      msg += ' Se generaron ' + res.materia.clases_generadas + ' clases.';
+    }
+    App.toast(msg, 'success');
+    
     App.qs('#materiaForm').reset();
     App.qsa('.day-opt input').forEach(c => c.checked = false);
+    
+    // Auto-seleccionar primer horario de vuelta
+    if (pills[0]) {
+      pills[0].click();
+    }
   })
   .catch(err => App.toast(err.message, 'error'));
 });

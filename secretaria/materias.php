@@ -35,7 +35,7 @@ $materias = $pdo->query(
 $partes    = explode(' ', $_SESSION['nombre']);
 $iniciales = strtoupper(substr($partes[0],0,1).substr($partes[1]??'',0,1));
 
-$dias_semana = [1=>'Lun',2=>'Mar',3=>'Mié',4=>'Jue',5=>'Vie',6=>'Sáb',7=>'Dom'];
+$dias_semana = [1=>'Lun',2=>'Mar',3=>'Mié',4=>'Jue',5=>'Vie'];
 
 // Carga la Vista
 require_once '../views/secretaria/materias_view.php';
