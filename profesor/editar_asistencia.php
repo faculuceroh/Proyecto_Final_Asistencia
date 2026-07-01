@@ -26,6 +26,12 @@ if (!$materia_prof || ($materia_prof['profesor_id'] != $prof_id && $materia_prof
     exit;
 }
 
+// Solo se puede editar la asistencia una vez que la clase arrancó (en_curso o finalizada)
+if ($clase['estado'] === 'pendiente') {
+    header('Location: dashboard.php');
+    exit;
+}
+
 // Alumnos inscriptos con su estado de asistencia actual
 $stmt = $db->prepare(
     'SELECT u.id, u.legajo, u.nombre, u.apellido,
@@ -44,7 +50,7 @@ $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $badge = [
     'presente' => 'badge-success',
     'tardanza' => 'badge-warning',
-    'ausente'  => 'badge-muted',
+    'ausente'  => 'badge-danger',
 ];
 
 $partes    = explode(' ', $_SESSION['nombre']);
@@ -59,4 +65,3 @@ $estado_label = [
 
 // Carga la Vista
 require_once '../views/profesor/editar_asistencia_view.php';
->

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
-require_auth(['admin']);
+require_auth(['admin', 'secretaria']);
 
 header('Content-Type: application/json; charset=utf-8');
 

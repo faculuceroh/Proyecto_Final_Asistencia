@@ -147,10 +147,12 @@
             <div class="class-info">
               <h3><?= htmlspecialchars($c['materia']) ?></h3>
               <div class="meta">
-                <?php if ($c['modalidad'] === 'presencial' && $c['aula']): ?>
+                <?php if ($c['modalidad'] === 'virtual'): ?>
+                  <span><i class="fa-solid fa-video"></i> Virtual</span>
+                <?php elseif ($c['aula']): ?>
                   <span><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($c['aula']) ?></span>
                 <?php else: ?>
-                  <span><i class="fa-solid fa-video"></i> Virtual</span>
+                  <span><i class="fa-solid fa-building"></i> Presencial</span>
                 <?php endif; ?>
                 <span><i class="fa-solid fa-users"></i> <?= htmlspecialchars($c['curso']) ?></span>
                 <span class="badge <?= $badge_cls ?>"><?= htmlspecialchars($badge_txt) ?></span>
@@ -166,9 +168,15 @@
                   <i class="fa-solid fa-qrcode"></i> Tomar asistencia
                 </a>
               <?php endif; ?>
-              <a href="editar_asistencia.php?clase_id=<?= $c['id'] ?>" class="btn btn-ghost btn-sm">
-                <i class="fa-solid fa-pen-to-square"></i> Editar asistencia
-              </a>
+              <?php if ($c['estado'] !== 'pendiente'): ?>
+                <a href="editar_asistencia.php?clase_id=<?= $c['id'] ?>" class="btn btn-ghost btn-sm">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar asistencia
+                </a>
+              <?php else: ?>
+                <button class="btn btn-ghost btn-sm" disabled title="Se habilita cuando la clase arranca">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar asistencia
+                </button>
+              <?php endif; ?>
               <a href="historial.php" class="btn <?= $finalizada ? 'btn-primary' : 'btn-ghost' ?> btn-sm">
                 <i class="fa-solid fa-eye"></i> Ver historial
               </a>

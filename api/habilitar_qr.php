@@ -104,12 +104,21 @@ if ($tipo === 'entrada') {
     $pdo->prepare('UPDATE qr_sesiones SET activo = 0 WHERE id = ?')->execute([$sesion_entrada['id']]);
 
     // Crear sesión de salida con expiración de 15 minutos
-    $expira = date('Y-m-d H:i:s', time() + 15 * 60);
+    $expira_ts = time() + 15 * 60;
+    $expira    = date('Y-m-d H:i:s', $expira_ts);
     $stmt = $pdo->prepare(
         'INSERT INTO qr_sesiones (aula_id, clase_id, tipo, profesor_id, activo, expira_en)
          VALUES (?, ?, "salida", ?, 1, ?)'
     );
     $stmt->execute([$aula_id, $clase_id, $prof_id, $expira]);
 
-    echo json_encode(['ok' => true, 'tipo' => 'salida', 'aula' => $aula['nombre'], 'expira_en' => $expira]);
+    echo json_encode([
+        'ok'           => true,
+        'tipo'         => 'salida',
+        'aula'         => $aula['nombre'],
+        'expira_en'    => $expira,
+        // Timestamp inequívoco en UTC (independiente de la zona horaria del servidor)
+        // para que el navegador calcule el countdown sin desfasajes.
+        'expira_en_iso'=> gmdate('Y-m-d\TH:i:s\Z', $expira_ts),
+    ]);
 }

@@ -25,7 +25,7 @@
           <img src="assets/img/logo.png" alt="Logo de Asistencia QR" width="60" height="60" />
           <div class="brand">
             <h1 class="brand-title">Asistencia QR</h1>
-            <p>Instituto · Portal de acceso</p>
+            <p>UTN FRH · Portal de acceso</p>
           </div>
         </header>
 
@@ -61,7 +61,7 @@
           <a href="password/recupero.php" class="auth-forgot">¿Olvidaste tu contraseña?</a>
         </form>
 
-        <p class="auth-foot">© 2026 Instituto · Sistema de Asistencia por QR</p>
+        <p class="auth-foot">© 2026 UTN FRH · Sistema de Asistencia por QR</p>
       </section>
     </div>
   </main>

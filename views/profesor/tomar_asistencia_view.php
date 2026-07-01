@@ -129,6 +129,9 @@
                 <div class="countdown-label" id="countdownLabel">15:00</div>
                 <div class="countdown-bar"><div class="countdown-bar-fill" id="countdownFill" style="width:100%"></div></div>
               </div>
+              <button class="btn btn-danger btn-block" id="btnFinalizar">
+                <i class="fa-solid fa-circle-stop"></i> Finalizar clase
+              </button>
             </div>
 
             <!-- Estado: clase finalizada -->
@@ -237,11 +240,30 @@
         body: JSON.stringify({ clase_id: CLASE_ID, aula_id: aulaId, tipo: 'salida' }),
         loader: true,
       }).then(res => {
-        const exp = new Date(res.expira_en.replace(' ', 'T'));
+        const exp = new Date(res.expira_en_iso);
         showSalida(stateEntrada.dataset.aulaNombre, exp);
       }).catch(err => {
         App.toast(err.message, 'error');
         btnSalida.disabled = false;
+      });
+    });
+  }
+
+  // ── Finalizar clase manualmente ───────────────────────────────
+  const btnFinalizar = App.qs('#btnFinalizar');
+  if (btnFinalizar) {
+    btnFinalizar.addEventListener('click', () => {
+      if (!confirm('¿Finalizar la clase ahora? Se deshabilitará el QR de salida y los alumnos que no hayan escaneado quedarán como ausentes.')) return;
+      btnFinalizar.disabled = true;
+      App.api('../api/cerrar_qr.php', {
+        method: 'POST',
+        body: JSON.stringify({ clase_id: CLASE_ID }),
+        loader: true,
+      }).then(() => {
+        showFinalizada();
+      }).catch(err => {
+        App.toast(err.message, 'error');
+        btnFinalizar.disabled = false;
       });
     });
   }
@@ -252,8 +274,8 @@
     view && view.classList.remove('hidden');
   }
 
-  function showEntrada(aulaNombre, aulaToken) {
-    stateEntrada.dataset.aulaId     = aulaSelect ? aulaSelect.value : '';
+  function showEntrada(aulaNombre, aulaToken, aulaId) {
+    stateEntrada.dataset.aulaId     = aulaId != null ? aulaId : (aulaSelect ? aulaSelect.value : '');
     stateEntrada.dataset.aulaNombre = aulaNombre;
     App.qs('#aulaNombreEntrada').textContent = aulaNombre;
     setView(stateEntrada);
@@ -311,6 +333,7 @@
 
   // ── Polling de estado ─────────────────────────────────────────
   function startPolling() {
+    if (pollInt) clearInterval(pollInt);
     poll();
     pollInt = setInterval(poll, 5000);
   }
@@ -330,10 +353,13 @@
         return;
       }
 
-      // Sync visual state with server
+      // Sync visual state with server (por ejemplo, al volver a esta página
+      // con una sesión de QR ya habilitada desde antes)
       if (data.activo && data.tipo === 'salida' && stateSalida.classList.contains('hidden')) {
-        const exp = new Date(data.expira_en.replace(' ', 'T'));
+        const exp = new Date(data.expira_en_iso);
         showSalida(data.aula_nombre, exp);
+      } else if (data.activo && data.tipo === 'entrada' && stateEntrada.classList.contains('hidden')) {
+        showEntrada(data.aula_nombre, data.aula_token, data.aula_id);
       }
     } catch (_) {}
   }

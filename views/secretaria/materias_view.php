@@ -21,6 +21,7 @@
       <span class="nav-label">Gestión</span>
       <a href="exportar.php"><i class="fa-solid fa-file-export"></i> Clases del período</a>
       <a href="materias.php" class="active"><i class="fa-solid fa-book"></i> Materias</a>
+      <a href="aulas.php"><i class="fa-solid fa-door-open"></i> Aulas</a>
       <a href="inscripciones.php"><i class="fa-solid fa-user-plus"></i> Inscripciones</a>
       <a href="usuarios.php"><i class="fa-solid fa-users"></i> Alta de usuarios</a>
       <a href="reportes.php"><i class="fa-solid fa-chart-pie"></i> Reportes</a>
@@ -147,20 +148,21 @@
 
               <!-- Rango del Cuatrimestre para Clases Automáticas -->
               <div class="field field-dates">
-                <label style="font-size:0.88rem; font-weight:600; color:var(--c-primary); display:flex; align-items:center; gap:6px; margin-bottom: 2px;">
-                  <i class="fa-solid fa-calendar-days" style="color: var(--c-accent-dark);"></i> Generar Clases del Periodo
-                </label>
-                <p class="text-muted" style="font-size: 0.78rem; margin-bottom: 10px;">
-                  Ingresá las fechas para programar todas las clases del cuatrimestre automáticamente.
-                </p>
-                <div class="form-grid">
-                  <div class="field">
-                    <label>Fecha inicio</label>
-                    <input class="input" type="date" name="fecha_inicio" id="inputFechaInicio" required />
-                  </div>
-                  <div class="field">
-                    <label>Fecha fin</label>
-                    <input class="input" type="date" name="fecha_fin" id="inputFechaFin" required />
+                <label>Generar clases del período</label>
+                <div class="dates-box">
+                  <p class="text-muted" style="font-size:0.78rem;margin-bottom:12px">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Ingresá las fechas para programar todas las clases del cuatrimestre automáticamente.
+                  </p>
+                  <div class="dates-grid">
+                    <div class="field" style="margin:0">
+                      <label>Fecha inicio</label>
+                      <input class="input" type="date" name="fecha_inicio" id="inputFechaInicio" required />
+                    </div>
+                    <div class="field" style="margin:0">
+                      <label>Fecha fin</label>
+                      <input class="input" type="date" name="fecha_fin" id="inputFechaFin" required />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -229,10 +231,14 @@
 /* Grilla horizontal para el formulario */
 .materia-form-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
-  padding: 0 20px 20px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px 20px;
+  padding: 4px 20px 20px;
 }
+/* min-width:0 evita que un elemento angosto (botones, inputs) fuerce
+   el grid/flex a desbordar horizontalmente en vez de achicarse */
+.materia-form-grid .field { min-width: 0; }
+
 .materia-form-grid .field-name { grid-column: span 4; }
 .materia-form-grid .field-code { grid-column: span 2; }
 .materia-form-grid .field-course { grid-column: span 3; }
@@ -241,35 +247,35 @@
 .materia-form-grid .field-prof1 { grid-column: span 6; }
 .materia-form-grid .field-prof2 { grid-column: span 6; }
 
-.materia-form-grid .field-days { grid-column: span 4; }
-.materia-form-grid .field-shift { grid-column: span 4; }
-.materia-form-grid .field-dates { grid-column: span 4; }
+.materia-form-grid .field-days  { grid-column: span 12; }
+.materia-form-grid .field-shift { grid-column: span 7; }
+.materia-form-grid .field-dates { grid-column: span 5; }
 
-.materia-form-grid .field-btn { grid-column: span 12; }
+.materia-form-grid .field-btn { grid-column: span 12; margin-top: 4px; }
 
 @media (max-width: 992px) {
   .materia-form-grid .field-name { grid-column: span 12; }
   .materia-form-grid .field-code { grid-column: span 4; }
   .materia-form-grid .field-course { grid-column: span 4; }
   .materia-form-grid .field-modalidad { grid-column: span 4; }
-  
+
   .materia-form-grid .field-prof1 { grid-column: span 12; }
   .materia-form-grid .field-prof2 { grid-column: span 12; }
-  
-  .materia-form-grid .field-days { grid-column: span 12; }
+
+  .materia-form-grid .field-days  { grid-column: span 12; }
   .materia-form-grid .field-shift { grid-column: span 12; }
   .materia-form-grid .field-dates { grid-column: span 12; }
 }
 
 /* Days picker */
-.days-picker { display:flex; gap:4px; flex-wrap:wrap; }
+.days-picker { display:flex; gap:6px; flex-wrap:wrap; }
 .day-opt input { display:none; }
 .day-opt span {
-  display:inline-block; padding:6px 10px; border-radius:var(--r-sm); font-size:0.78rem;
+  display:inline-block; padding:8px 16px; border-radius:var(--r-sm); font-size:0.82rem;
   font-weight:600; cursor:pointer; border:1px solid var(--c-border);
   color:var(--c-text-soft); background:var(--c-surface); transition:all var(--t-fast);
   text-align: center;
-  min-width: 45px;
+  min-width: 52px;
 }
 .day-opt:hover span {
   border-color: var(--c-primary-300);
@@ -277,6 +283,24 @@
 }
 .day-opt input:checked + span {
   background:var(--c-primary); color:#fff; border-color:var(--c-primary);
+}
+
+/* Caja "Generar clases del período", a la par de "Rango Horario" */
+.dates-box {
+  background: var(--c-muted-soft);
+  padding: 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border);
+  box-sizing: border-box;
+  flex: 1;
+}
+.dates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .dates-grid { grid-template-columns: 1fr; }
 }
 
 /* Paginación */
@@ -290,6 +314,14 @@
 .pg-btn.pg-active { background:var(--c-primary); color:#fff; border-color:var(--c-primary); }
 .pg-btn:disabled { opacity:.35; cursor:default; }
 
+/* field-shift y field-dates quedan uno al lado del otro (ver .materia-form-grid);
+   los estiro con flex para que sus cajas internas tengan la misma altura */
+.materia-form-grid .field-shift,
+.materia-form-grid .field-dates {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Shift selector styles */
 .shift-selector-container {
   display: flex;
@@ -299,6 +331,7 @@
   padding: 10px;
   border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
+  flex: 1;
 }
 .shift-group {
   display: flex;
@@ -323,13 +356,15 @@
 .shift-pill-btn {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  padding: 6px 10px;
+  padding: 7px 8px;
   border-radius: var(--r-sm);
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--c-text-soft);
   transition: all var(--t-fast);
   flex: 1 1 calc(33.333% - 4px);
+  min-width: 0;
+  white-space: nowrap;
   text-align: center;
   cursor: pointer;
 }
@@ -369,9 +404,6 @@ function rowHtml(m) {
     <td style="white-space:nowrap">${esc(m.horario || '—')}</td>
     <td>${mod}</td>
     <td style="white-space:nowrap">
-      <a href="generar_clases.php?materia_id=${m.id}" class="btn btn-ghost btn-sm" title="Generar clases">
-        <i class="fa-solid fa-calendar-plus"></i>
-      </a>
       <button class="btn btn-ghost btn-sm" data-elim="${m.id}" data-nombre="${esc(m.nombre)}"
               title="Eliminar" style="color:var(--c-danger)">
         <i class="fa-solid fa-trash"></i>

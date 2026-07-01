@@ -1,4 +1,9 @@
 <?php
+// El date.timezone de XAMPP viene en Europe/Berlin por defecto; sin esto,
+// date()/time() quedan desfasados respecto a la hora real de la institución
+// y rompen la clasificación de tardanzas y la expiración de los QR.
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'asistencia_qr');
 define('DB_USER', 'root');

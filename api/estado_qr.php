@@ -14,7 +14,7 @@ $pdo = getPDO();
 
 // Sesión activa para esta clase
 $stmt = $pdo->prepare(
-    'SELECT qs.id, qs.tipo, qs.expira_en, qs.activado_en,
+    'SELECT qs.id, qs.tipo, qs.expira_en, qs.activado_en, qs.aula_id,
             a.nombre AS aula_nombre, a.token AS aula_token
      FROM qr_sesiones qs
      JOIN aulas a ON a.id = qs.aula_id
@@ -57,9 +57,11 @@ echo json_encode([
     'ok'          => true,
     'activo'      => $sesion !== null,
     'tipo'        => $sesion ? $sesion['tipo'] : null,
+    'aula_id'     => $sesion ? (int)$sesion['aula_id'] : null,
     'aula_nombre' => $sesion ? $sesion['aula_nombre'] : null,
     'aula_token'  => $sesion ? $sesion['aula_token']  : null,
     'expira_en'   => $sesion ? $sesion['expira_en']   : null,
+    'expira_en_iso' => ($sesion && $sesion['expira_en']) ? gmdate('Y-m-d\TH:i:s\Z', strtotime($sesion['expira_en'])) : null,
     'presentes'   => $presentes,
     'total'       => $total,
     'clase_estado'=> $clase['estado'] ?? null,

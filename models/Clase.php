@@ -33,7 +33,7 @@ class Clase extends BaseModel {
             "SELECT c.id, c.hora_inicio, c.duracion_min, c.aula, c.modalidad, c.estado,
                     m.nombre AS materia, m.curso,
                     (SELECT COUNT(*) FROM inscripciones WHERE materia_id = m.id) AS total_alumnos,
-                    (SELECT COUNT(*) FROM asistencias WHERE clase_id = c.id AND hora_entrada IS NOT NULL) AS presentes
+                    (SELECT COUNT(*) FROM asistencias WHERE clase_id = c.id AND estado IN ('presente','tardanza')) AS presentes
              FROM clases c
              JOIN materias m ON m.id = c.materia_id
              WHERE (m.profesor_id = ? OR m.profesor_2_id = ?) AND c.fecha = CURDATE()

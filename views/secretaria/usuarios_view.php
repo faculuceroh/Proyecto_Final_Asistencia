@@ -21,6 +21,7 @@
       <span class="nav-label">Gestión</span>
       <a href="exportar.php"><i class="fa-solid fa-file-export"></i> Clases del período</a>
       <a href="materias.php"><i class="fa-solid fa-book"></i> Materias</a>
+      <a href="aulas.php"><i class="fa-solid fa-door-open"></i> Aulas</a>
       <a href="inscripciones.php"><i class="fa-solid fa-user-plus"></i> Inscripciones</a>
       <a href="usuarios.php" class="active"><i class="fa-solid fa-users"></i> Alta de usuarios</a>
       <a href="reportes.php"><i class="fa-solid fa-chart-pie"></i> Reportes</a>

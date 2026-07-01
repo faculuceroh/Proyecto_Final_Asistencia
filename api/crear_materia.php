@@ -45,8 +45,59 @@ if (!$codigo) {
     $codigo   = implode('', array_map(fn($p) => substr($p, 0, 3), $palabras));
 }
 
+$pdo = getPDO();
+
+// Evitar cargar la misma materia dos veces (mismo nombre + curso)
+$stmt = $pdo->prepare(
+    'SELECT id FROM materias
+     WHERE activo = 1 AND curso = ? AND LOWER(nombre) = LOWER(?)
+     LIMIT 1'
+);
+$stmt->execute([$curso, $nombre]);
+if ($stmt->fetch()) {
+    http_response_code(409);
+    echo json_encode(['message' => 'Ya existe la materia "'.$nombre.'" en el curso "'.$curso.'"']);
+    exit;
+}
+
+// Evitar que un profesor quede asignado a dos materias el mismo día y horario
+$dias_nombres_check = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+$profesores_a_chequear = array_filter([
+    'a cargo'  => $profesor_id,
+    'segundo'  => $profesor_2_id,
+]);
+if (!empty($horarios) && is_array($horarios) && !empty($profesores_a_chequear)) {
+    $stmt_conflicto = $pdo->prepare(
+        'SELECT m.nombre, mh.dia_semana, mh.hora_inicio, mh.hora_fin
+         FROM materia_horarios mh
+         JOIN materias m ON m.id = mh.materia_id
+         WHERE m.activo = 1 AND mh.dia_semana = ?
+           AND (m.profesor_id = ? OR m.profesor_2_id = ?)
+           AND mh.hora_inicio < ? AND mh.hora_fin > ?
+         LIMIT 1'
+    );
+    foreach ($horarios as $h) {
+        $dia = (int) ($h['dia'] ?? 0);
+        $hi  = $h['hora_inicio'] ?? '';
+        $hf  = $h['hora_fin']    ?? '';
+        if (!$dia || !$hi || !$hf) continue;
+
+        foreach ($profesores_a_chequear as $rol => $pid) {
+            $stmt_conflicto->execute([$dia, $pid, $pid, $hf, $hi]);
+            $conflicto = $stmt_conflicto->fetch();
+            if ($conflicto) {
+                http_response_code(409);
+                echo json_encode(['message' =>
+                    'El profesor '.$rol.' ya dicta "'.$conflicto['nombre'].'" los '.$dias_nombres_check[$dia].
+                    ' de '.substr($conflicto['hora_inicio'],0,5).' a '.substr($conflicto['hora_fin'],0,5).'.'
+                ]);
+                exit;
+            }
+        }
+    }
+}
+
 try {
-    $pdo = getPDO();
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare(
