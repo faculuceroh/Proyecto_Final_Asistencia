@@ -7,16 +7,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="../assets/css/main.css" />
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
 </head>
 <body>
-<div class="app-layout">
+<div class="app-layout role-profesor">
 
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../assets/img/logo.png" alt="Logo" />
+      <img src="../assets/img/logo-dashboard.png" alt="Logo" />
       <div><div class="name">Asistencia QR</div><div class="sub">Portal Profesor</div></div>
     </div>
     <nav class="sidebar-nav">
@@ -71,9 +71,8 @@
                 <div style="font-weight:700;font-size:1rem"><?= htmlspecialchars($mat['nombre']) ?></div>
                 <div class="text-muted" style="font-size:0.83rem"><?= htmlspecialchars($mat['curso']) ?></div>
               </div>
-              <span class="badge <?= $mat['modalidad']==='virtual'?'badge-muted':'badge-accent' ?>">
-                <?= ucfirst($mat['modalidad']) ?>
-              </span>
+              <?php $mb = ['presencial'=>['badge-accent','Presencial'],'virtual'=>['badge-muted','Virtual'],'hibrida'=>['badge-warning','Híbrida']][$mat['modalidad']] ?? ['badge-accent', ucfirst($mat['modalidad'])]; ?>
+              <span class="badge <?= $mb[0] ?>"><?= $mb[1] ?></span>
             </div>
 
             <!-- Horarios -->
@@ -147,7 +146,9 @@
             <div class="class-info">
               <h3><?= htmlspecialchars($c['materia']) ?></h3>
               <div class="meta">
-                <?php if ($c['modalidad'] === 'virtual'): ?>
+                <?php if ($c['modalidad'] === 'hibrida'): ?>
+                  <span><i class="fa-solid fa-shuffle"></i> Híbrida · a elegir</span>
+                <?php elseif ($c['modalidad'] === 'virtual'): ?>
                   <span><i class="fa-solid fa-video"></i> Virtual</span>
                 <?php elseif ($c['aula']): ?>
                   <span><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($c['aula']) ?></span>
@@ -162,6 +163,11 @@
               <?php if ($finalizada): ?>
                 <button class="btn btn-ghost btn-sm" disabled>
                   <i class="fa-solid fa-qrcode"></i> Tomar asistencia
+                </button>
+              <?php elseif ($c['modalidad'] === 'hibrida'): ?>
+                <button class="btn btn-accent btn-sm" data-elegir-modalidad
+                        data-clase-id="<?= $c['id'] ?>">
+                  <i class="fa-solid fa-shuffle"></i> Elegir modalidad y dar clase
                 </button>
               <?php else: ?>
                 <a href="tomar_asistencia.php?clase_id=<?= $c['id'] ?>" class="btn btn-accent btn-sm">
@@ -265,6 +271,71 @@
         params.set('aula', aulaInput.value.trim());
       }
       window.location.href = 'generar_qr.php?' + params.toString();
+    });
+  })();
+</script>
+
+<!-- Modal: elegir modalidad de una clase híbrida antes de darla -->
+<div class="modal-overlay hidden" id="modalidadModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalidadModalTitle">
+    <div class="modal-head">
+      <h3 id="modalidadModalTitle">¿Cómo vas a dar esta clase?</h3>
+      <button class="modal-close" data-modalidad-close aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="font-size:0.88rem;margin-bottom:16px">
+        Esta materia es de modalidad híbrida. Elegí si hoy la vas a dar presencial (QR en el aula)
+        o virtual (importás la asistencia de Teams).
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-accent btn-block" data-modalidad-elegir="presencial">
+          <i class="fa-solid fa-location-dot"></i> Presencial (QR en el aula)
+        </button>
+        <button class="btn btn-accent btn-block" data-modalidad-elegir="virtual">
+          <i class="fa-solid fa-video"></i> Virtual (importar Teams)
+        </button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-modalidad-close>Cancelar</button>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    const modal = App.qs('#modalidadModal');
+    if (!modal) return;
+    let claseId = null;
+
+    function open(id) {
+      claseId = id;
+      modal.classList.remove('hidden');
+    }
+    function close() {
+      claseId = null;
+      modal.classList.add('hidden');
+    }
+
+    App.qsa('[data-elegir-modalidad]').forEach(b =>
+      b.addEventListener('click', () => open(b.dataset.claseId))
+    );
+    App.qsa('[data-modalidad-close]').forEach(b => b.addEventListener('click', close));
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    App.qsa('[data-modalidad-elegir]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modalidad = btn.dataset.modalidadElegir;
+        App.api('../api/elegir_modalidad_clase.php', {
+          method: 'POST', loader: true,
+          body: JSON.stringify({ clase_id: parseInt(claseId), modalidad }),
+        })
+        .then(() => {
+          window.location.href = modalidad === 'virtual'
+            ? 'importar_teams.php?clase_id=' + claseId
+            : 'tomar_asistencia.php?clase_id=' + claseId;
+        })
+        .catch(err => App.toast(err.message, 'error'));
+      });
     });
   })();
 </script>

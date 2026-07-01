@@ -1,4 +1,4 @@
-  <section class="section">
+  <section class="section section-contacto">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Soporte</span>

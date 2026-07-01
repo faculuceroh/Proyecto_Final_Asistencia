@@ -6,15 +6,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="../assets/css/main.css" />
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
 </head>
 <body>
-<div class="app-layout">
+<div class="app-layout role-alumno">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../assets/img/logo.png" alt="Logo" />
+      <img src="../assets/img/logo-dashboard.png" alt="Logo" />
       <div><div class="name">Asistencia QR</div><div class="sub">Portal Alumno</div></div>
     </div>
     <nav class="sidebar-nav">
@@ -63,13 +63,12 @@
           $pct   = (float)($m['pct'] ?? 0);
           $color = $pct >= 75 ? 'var(--c-success)' : ($pct >= 50 ? 'var(--c-warning)' : 'var(--c-danger)');
           $es_virtual = $m['modalidad'] === 'virtual';
+          $mb = ['presencial'=>['badge-accent','Presencial'],'virtual'=>['badge-muted','Virtual'],'hibrida'=>['badge-warning','Híbrida']][$m['modalidad']] ?? ['badge-accent', ucfirst($m['modalidad'])];
         ?>
         <article class="card subject-card <?= $es_virtual ? 'virtual' : '' ?>">
           <div class="subject-head">
             <h3><?= htmlspecialchars($m['nombre']) ?></h3>
-            <span class="badge <?= $es_virtual ? 'badge-muted' : 'badge-accent' ?>">
-              <?= ucfirst($m['modalidad']) ?>
-            </span>
+            <span class="badge <?= $mb[0] ?>"><?= $mb[1] ?></span>
           </div>
           <div class="subject-meta">
             <span><i class="fa-solid fa-chalkboard-user"></i> Prof. <?= htmlspecialchars($m['profesor']) ?></span>

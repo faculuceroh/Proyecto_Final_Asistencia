@@ -6,15 +6,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="../assets/css/main.css" />
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
 </head>
 <body>
-<div class="app-layout">
+<div class="app-layout role-alumno">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../assets/img/logo.png" alt="Logo" />
+      <img src="../assets/img/logo-dashboard.png" alt="Logo" />
       <div><div class="name">Asistencia QR</div><div class="sub">Portal Alumno</div></div>
     </div>
     <nav class="sidebar-nav">
@@ -75,9 +75,8 @@
                 <div style="font-weight:700;font-size:1rem"><?= htmlspecialchars($mat['nombre']) ?></div>
                 <div class="text-muted" style="font-size:0.83rem"><?= htmlspecialchars($mat['curso']) ?></div>
               </div>
-              <span class="badge <?= $mat['modalidad']==='virtual'?'badge-muted':'badge-accent' ?>">
-                <?= ucfirst($mat['modalidad']) ?>
-              </span>
+              <?php $mb = ['presencial'=>['badge-accent','Presencial'],'virtual'=>['badge-muted','Virtual'],'hibrida'=>['badge-warning','Híbrida']][$mat['modalidad']] ?? ['badge-accent', ucfirst($mat['modalidad'])]; ?>
+              <span class="badge <?= $mb[0] ?>"><?= $mb[1] ?></span>
             </div>
 
             <div style="font-size:0.83rem;color:var(--c-text-soft);margin-bottom:10px">
@@ -144,7 +143,9 @@
             <h3><?= htmlspecialchars($c['materia']) ?></h3>
             <div class="meta">
               <span><i class="fa-solid fa-chalkboard-user"></i> Prof. <?= htmlspecialchars($c['profesor']) ?></span>
-              <?php if ($c['modalidad'] === 'virtual'): ?>
+              <?php if ($c['modalidad'] === 'hibrida'): ?>
+                <span><i class="fa-solid fa-shuffle"></i> Modalidad a definir por el profesor</span>
+              <?php elseif ($c['modalidad'] === 'virtual'): ?>
                 <span><i class="fa-solid fa-video"></i> Virtual</span>
               <?php elseif ($c['aula']): ?>
                 <span><i class="fa-solid fa-location-dot"></i> Aula <?= htmlspecialchars($c['aula']) ?></span>

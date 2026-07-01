@@ -6,7 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="../assets/css/main.css" />
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
   <style>
@@ -18,10 +18,10 @@
   </style>
 </head>
 <body>
-<div class="app-layout">
+<div class="app-layout role-secretaria">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../assets/img/logo.png" alt="Logo" />
+      <img src="../assets/img/logo-dashboard.png" alt="Logo" />
       <div><div class="name">Asistencia QR</div><div class="sub">Secretaría</div></div>
     </div>
     <nav class="sidebar-nav">

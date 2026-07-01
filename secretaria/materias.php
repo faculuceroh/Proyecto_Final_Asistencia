@@ -9,7 +9,7 @@ $pdo = getPDO();
 $cursos = $pdo->query("SELECT nombre FROM cursos ORDER BY nombre")->fetchAll(PDO::FETCH_COLUMN);
 
 $profesores = $pdo->query(
-    "SELECT id, CONCAT(nombre,' ',apellido) AS nombre
+    "SELECT id, legajo, CONCAT(nombre,' ',apellido) AS nombre
      FROM usuarios WHERE rol='profesor' AND activo=1 ORDER BY apellido"
 )->fetchAll(PDO::FETCH_ASSOC);
 

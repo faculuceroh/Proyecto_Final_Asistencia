@@ -21,6 +21,8 @@ $stmt = $pdo->prepare(
 $stmt->execute([':pid' => $prof_id, ':pid2' => $prof_id]);
 $clases_virtuales = $stmt->fetchAll();
 
+$clase_preselect = (int) ($_GET['clase_id'] ?? 0);
+
 $partes    = explode(' ', $_SESSION['nombre']);
 $iniciales = strtoupper(substr($partes[0], 0, 1) . substr($partes[1] ?? '', 0, 1));
 

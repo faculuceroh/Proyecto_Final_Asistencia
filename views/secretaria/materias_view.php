@@ -6,15 +6,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/vendor/fontawesome/css/all.min.css" />
   <link rel="stylesheet" href="../assets/css/main.css" />
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
 </head>
 <body>
-<div class="app-layout">
+<div class="app-layout role-secretaria">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../assets/img/logo.png" alt="Logo" />
+      <img src="../assets/img/logo-dashboard.png" alt="Logo" />
       <div><div class="name">Asistencia QR</div><div class="sub">Secretaría</div></div>
     </div>
     <nav class="sidebar-nav">
@@ -74,25 +74,30 @@
                 <select class="select" name="modalidad">
                   <option value="presencial">Presencial</option>
                   <option value="virtual">Virtual</option>
+                  <option value="hibrida">Híbrida</option>
                 </select>
               </div>
               <div class="field field-prof1">
                 <label>Profesor a cargo</label>
-                <select class="select" name="profesor_id">
-                  <option value="">Sin asignar</option>
-                  <?php foreach ($profesores as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
-                  <?php endforeach; ?>
-                </select>
+                <div class="prof-autocomplete" data-prof-autocomplete>
+                  <input type="hidden" name="profesor_id" data-prof-hidden />
+                  <div class="input-group">
+                    <i class="input-icon fa-solid fa-magnifying-glass"></i>
+                    <input class="input" type="text" placeholder="Nombre o legajo..." autocomplete="off" data-prof-input />
+                  </div>
+                  <div class="prof-autocomplete-list hidden" data-prof-list></div>
+                </div>
               </div>
               <div class="field field-prof2">
                 <label>Segundo profesor <span class="text-muted">(opcional)</span></label>
-                <select class="select" name="profesor_2_id">
-                  <option value="">Sin asignar</option>
-                  <?php foreach ($profesores as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
-                  <?php endforeach; ?>
-                </select>
+                <div class="prof-autocomplete" data-prof-autocomplete>
+                  <input type="hidden" name="profesor_2_id" data-prof-hidden />
+                  <div class="input-group">
+                    <i class="input-icon fa-solid fa-magnifying-glass"></i>
+                    <input class="input" type="text" placeholder="Nombre o legajo..." autocomplete="off" data-prof-input />
+                  </div>
+                  <div class="prof-autocomplete-list hidden" data-prof-list></div>
+                </div>
               </div>
               <div class="field field-days">
                 <label>Días de cursada</label>
@@ -311,7 +316,7 @@
   background:transparent; color:var(--c-text-soft); transition:.15s;
 }
 .pg-btn:hover:not(.pg-active):not(:disabled) { background:var(--c-muted-soft); }
-.pg-btn.pg-active { background:var(--c-primary); color:#fff; border-color:var(--c-primary); }
+.pg-btn.pg-active { background:var(--primary); color:var(--c-primary); border-color:var(--primary); }
 .pg-btn:disabled { opacity:.35; cursor:default; }
 
 /* field-shift y field-dates quedan uno al lado del otro (ver .materia-form-grid);
@@ -373,9 +378,49 @@
   color: var(--c-primary);
 }
 .shift-pill-btn.active {
-  background: var(--c-primary);
-  color: var(--c-surface);
-  border-color: var(--c-primary);
+  background: var(--primary);
+  color: var(--c-primary);
+  border-color: var(--primary);
+}
+
+/* Buscador de profesor (nombre o legajo) */
+.prof-autocomplete { position: relative; }
+.prof-autocomplete-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-md);
+  padding: 4px;
+}
+.prof-autocomplete-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.prof-autocomplete-item:hover,
+.prof-autocomplete-item.is-active {
+  background: var(--c-muted-soft);
+}
+.prof-autocomplete-item .legajo {
+  color: var(--c-text-faint);
+  font-size: 0.78rem;
+}
+.prof-autocomplete-empty {
+  padding: 10px;
+  font-size: 0.84rem;
+  color: var(--c-text-faint);
+  text-align: center;
 }
 </style>
 <script src="../assets/js/utils.js"></script>
@@ -388,11 +433,72 @@ const PER_PAGE = 5;
 let filtrado = [...ALL];
 let pagina   = 1;
 
+// ── Buscador de profesor (nombre o legajo) ─────────────────────
+const PROFESORES  = <?= json_encode(array_values($profesores)) ?>;
+const PROF_LIMITE = 6; // mostrar solo los primeros N resultados
+
+function initProfAutocomplete(root) {
+  const input  = root.querySelector('[data-prof-input]');
+  const hidden = root.querySelector('[data-prof-hidden]');
+  const list   = root.querySelector('[data-prof-list]');
+
+  function close() {
+    list.classList.add('hidden');
+    list.innerHTML = '';
+  }
+
+  function renderResults(q) {
+    const coincidencias = PROFESORES.filter(p =>
+      p.nombre.toLowerCase().includes(q) || p.legajo.toLowerCase().includes(q)
+    ).slice(0, PROF_LIMITE);
+
+    if (coincidencias.length === 0) {
+      list.innerHTML = '<div class="prof-autocomplete-empty">Sin resultados</div>';
+      list.classList.remove('hidden');
+      return;
+    }
+
+    list.innerHTML = coincidencias.map(p => `
+      <div class="prof-autocomplete-item" data-id="${p.id}" data-nombre="${esc(p.nombre)}">
+        ${esc(p.nombre)} <span class="legajo">Legajo ${esc(p.legajo)}</span>
+      </div>`).join('');
+    list.classList.remove('hidden');
+
+    list.querySelectorAll('[data-id]').forEach(item => {
+      item.addEventListener('mousedown', function (e) {
+        e.preventDefault(); // evita el blur del input antes del click
+        hidden.value = this.dataset.id;
+        input.value  = this.dataset.nombre;
+        close();
+      });
+    });
+  }
+
+  input.addEventListener('input', function () {
+    hidden.value = ''; // si escribe, invalida la selección previa hasta elegir de la lista
+    const q = this.value.trim().toLowerCase();
+    if (!q) { close(); return; }
+    renderResults(q);
+  });
+
+  input.addEventListener('focus', function () {
+    if (this.value.trim()) renderResults(this.value.trim().toLowerCase());
+  });
+
+  input.addEventListener('blur', close);
+}
+
+document.querySelectorAll('[data-prof-autocomplete]').forEach(initProfAutocomplete);
+
 // ── Render tabla ──────────────────────────────────────────────
+const MOD_BADGE = {
+  presencial: ['badge-accent', 'Presencial'],
+  virtual:    ['badge-muted',  'Virtual'],
+  hibrida:    ['badge-warning','Híbrida'],
+};
 function rowHtml(m) {
-  const mod   = m.modalidad === 'virtual'
-    ? '<span class="badge badge-muted">Virtual</span>'
-    : '<span class="badge badge-accent">Presencial</span>';
+  const [modCls, modTxt] = MOD_BADGE[m.modalidad] || MOD_BADGE.presencial;
+  const mod = `<span class="badge ${modCls}">${modTxt}</span>`;
   const prof2 = m.profesor_2
     ? `<br><small class="text-muted">${esc(m.profesor_2)}</small>` : '';
   const cod   = m.codigo ? `<small class="text-muted">${esc(m.codigo)} · </small>` : '';

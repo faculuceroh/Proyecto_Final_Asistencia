@@ -1,6 +1,4 @@
-  <!-- ===== El proyecto ===== -->
-  <!-- Fondo decorativo en CSS; para usar una foto real, agregar el archivo
-       assets/img/proyecto-fondo.jpg (se acopla automáticamente, ver auth.css) -->
+  <!-- ===== El proyecto + Funcionalidades ===== -->
   <section class="section section-proyecto">
     <div class="container">
       <div class="section-head">
@@ -14,11 +12,8 @@
         </p>
       </div>
     </div>
-  </section>
 
-  <!-- ===== Funcionalidades ===== -->
-  <section class="section">
-    <div class="container">
+    <div class="container container-funcionalidades">
       <div class="section-head">
         <span class="eyebrow">Funcionalidades</span>
         <h2>Qué permite hacer el sistema</h2>
