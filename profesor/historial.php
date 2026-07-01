@@ -38,18 +38,25 @@ if ($materia_id && $clase_id) {
         exit;
     }
 
-    // Todos los alumnos inscriptos + su asistencia en esta clase
+    // Alumnos inscriptos + alumnos con asistencia registrada (ej. importados desde Teams
+    // que no estaban en inscripciones). Se usa UNION para no perder ninguno de los dos grupos.
     $stmt = $pdo->prepare(
         "SELECT u.apellido, u.nombre, u.legajo,
-                 COALESCE(a.estado, 'ausente') AS estado,
-                 TIME_FORMAT(a.hora_entrada, '%H:%i') AS hora_entrada
-          FROM inscripciones i
-          JOIN usuarios u ON u.id = i.alumno_id
-          LEFT JOIN asistencias a ON a.alumno_id = i.alumno_id AND a.clase_id = ?
-          WHERE i.materia_id = ?
-          ORDER BY u.apellido, u.nombre"
+                COALESCE(a.estado, 'ausente') AS estado,
+                TIME_FORMAT(a.hora_entrada, '%H:%i') AS hora_entrada,
+                (i.alumno_id IS NULL) AS no_inscripto
+         FROM (
+             SELECT alumno_id FROM inscripciones WHERE materia_id = :mid
+             UNION
+             SELECT alumno_id FROM asistencias WHERE clase_id = :cid
+         ) base
+         JOIN usuarios u ON u.id = base.alumno_id
+         LEFT JOIN asistencias a ON a.alumno_id = base.alumno_id AND a.clase_id = :cid2
+         LEFT JOIN inscripciones i ON i.alumno_id = base.alumno_id AND i.materia_id = :mid2
+         ORDER BY u.apellido, u.nombre"
     );
-    $stmt->execute([$clase_id, $materia_id]);
+    $stmt->execute([':mid' => $materia_id, ':cid' => $clase_id,
+                    ':cid2' => $clase_id,  ':mid2' => $materia_id]);
     $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $presentes = count(array_filter($alumnos, fn($a) => in_array($a['estado'], ['presente','tardanza'])));

@@ -1,5 +1,7 @@
   <!-- ===== El proyecto ===== -->
-  <section class="section section-alt">
+  <!-- Fondo decorativo en CSS; para usar una foto real, agregar el archivo
+       assets/img/proyecto-fondo.jpg (se acopla automáticamente, ver auth.css) -->
+  <section class="section section-proyecto">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Nuestro proyecto</span>

@@ -5,7 +5,7 @@
         <h2>¿Encontraste un error en la página?</h2>
         <p>
           Esta sección es para reportar problemas o errores del sistema. Escribinos por
-          el formulario o contactá directamente a cualquier integrante del equipo.
+          el formulario o contactá directamente a cualquier integrante de nuestro equipo.
         </p>
       </div>
 
@@ -51,27 +51,28 @@
           <h3>Contacto directo</h3>
           <p>También podés escribirnos por estos medios.</p>
           <div class="team-contact-list">
-            <a class="team-contact" href="mailto:proyectoasistenciaqr@gmail.com">
+            <a class="team-contact" href="mailto:asistenciaqrsoporte@gmail.com">
               <div class="ico-circle ico-mail"><i class="fa-solid fa-envelope"></i></div>
               <div class="info">
                 <strong>Gmail</strong>
-                <span>proyectoasistenciaqr@gmail.com</span>
+                <span>asistenciaqrsoporte@gmail.com</span>
               </div>
             </a>
-            <a class="team-contact" href="tel:+543794000000">
+            <a class="team-contact" href="tel:+541138493537">
               <div class="ico-circle ico-phone"><i class="fa-solid fa-phone"></i></div>
               <div class="info">
                 <strong>Teléfono</strong>
-                <span>+54 379 400-0000</span>
+                <span>+54 11 3849-3537</span>
               </div>
             </a>
+            <!--
             <a class="team-contact" href="https://instagram.com/asistenciaqr" target="_blank" rel="noopener">
               <div class="ico-circle ico-ig"><i class="fa-brands fa-instagram"></i></div>
               <div class="info">
                 <strong>Instagram</strong>
                 <span>@asistenciaqr</span>
               </div>
-            </a>
+            </a>-->
           </div>
         </div>
       </div>
@@ -80,15 +81,53 @@
 
   <script src="assets/js/utils.js"></script>
   <script>
-    document.getElementById('reportForm').addEventListener('submit', function (e) {
+    document.getElementById('reportForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      if (!this.checkValidity()) {
+      const form = this;
+
+      if (!form.checkValidity()) {
         if (window.App && App.toast) App.toast('Completá todos los campos.', 'error');
         else alert('Completá todos los campos.');
         return;
       }
-      if (window.App && App.toast) App.toast('¡Gracias! Recibimos tu reporte.', 'success');
-      else alert('¡Gracias! Recibimos tu reporte.');
-      this.reset();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+      const payload = {
+        nombre: form.nombre.value.trim(),
+        email: form.email.value.trim(),
+        asunto: form.asunto.value.trim(),
+        mensaje: form.mensaje.value.trim(),
+        _subject: 'Reporte: ' + form.asunto.value.trim(),
+      };
+
+      try {
+        const res = await fetch('https://formspree.io/f/xpqgjeoy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          if (window.App && App.toast) App.toast('¡Gracias! Recibimos tu reporte.', 'success');
+          else alert('¡Gracias! Recibimos tu reporte.');
+          form.reset();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          const msg = (data.errors && data.errors.map(e => e.message).join(', ')) || 'No se pudo enviar el reporte. Intentá de nuevo.';
+          if (window.App && App.toast) App.toast(msg, 'error');
+          else alert(msg);
+        }
+      } catch (err) {
+        const msg = 'Error de conexión. Intentá de nuevo.';
+        if (window.App && App.toast) App.toast(msg, 'error');
+        else alert(msg);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
+      }
     });
   </script>

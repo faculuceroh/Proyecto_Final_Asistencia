@@ -255,6 +255,27 @@
 .section-head h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 12px; }
 .section-head p { color: var(--c-text-soft); font-size: 1.02rem; }
 
+/* Sección "Nuestro proyecto" con imagen de fondo.
+   El último layer apunta a assets/img/proyecto-fondo.jpg: si ese archivo no existe
+   el navegador simplemente omite ese layer y queda el gradiente + patrón de puntos. */
+.section.section-proyecto {
+  position: relative;
+  overflow: hidden;
+  border-top: none;
+  background-color: var(--c-primary);
+  background-image:
+    linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(14, 165, 233, 0.8)),
+    radial-gradient(circle, rgba(255, 255, 255, 0.16) 1.5px, transparent 1.5px),
+    url('../img/proyecto-fondo.jpg');
+  background-size: cover, 22px 22px, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat, repeat, no-repeat;
+}
+.section-proyecto .section-head { position: relative; z-index: 1; }
+.section-proyecto .section-head .eyebrow { color: #7dd3fc; }
+.section-proyecto .section-head h2 { color: #fff; }
+.section-proyecto .section-head p { color: rgba(255, 255, 255, 0.85); }
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
