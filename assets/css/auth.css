@@ -255,9 +255,7 @@
 .section-head h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 12px; }
 .section-head p { color: var(--c-text-soft); font-size: 1.02rem; }
 
-/* Sección "Nuestro proyecto" con imagen de fondo.
-   El último layer apunta a assets/img/proyecto-fondo.jpg: si ese archivo no existe
-   el navegador simplemente omite ese layer y queda el gradiente + patrón de puntos. */
+/* Sección "Nuestro proyecto" con imagen de fondo. */
 .section.section-proyecto {
   position: relative;
   overflow: hidden;
@@ -266,15 +264,42 @@
   background-image:
     linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(14, 165, 233, 0.8)),
     radial-gradient(circle, rgba(255, 255, 255, 0.16) 1.5px, transparent 1.5px),
-    url('../img/proyecto-fondo.jpg');
+    url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80');
   background-size: cover, 22px 22px, cover;
   background-position: center, center, center;
   background-repeat: no-repeat, repeat, no-repeat;
 }
 .section-proyecto .section-head { position: relative; z-index: 1; }
-.section-proyecto .section-head .eyebrow { color: #7dd3fc; }
+.section-proyecto .section-head .eyebrow {
+  color: #7dd3fc;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
 .section-proyecto .section-head h2 { color: #fff; }
 .section-proyecto .section-head p { color: rgba(255, 255, 255, 0.85); }
+
+/* Sección de contacto con imagen de fondo. */
+.section.section-contacto {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--c-primary);
+  background-image:
+    linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(14, 165, 233, 0.8)),
+    radial-gradient(circle, rgba(255, 255, 255, 0.16) 1.5px, transparent 1.5px),
+    url('https://images.unsplash.com/photo-1553775282-20af80779df7?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover, 22px 22px, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat, repeat, no-repeat;
+}
+.section-contacto .section-head { position: relative; z-index: 1; }
+.section-contacto .section-head .eyebrow { color: #7dd3fc; }
+.section-contacto .section-head h2 { color: #fff; }
+.section-contacto .section-head p { color: rgba(255, 255, 255, 0.85); }
+.section-contacto .contact-layout { position: relative; z-index: 1; }
+
+/* Segundo bloque (Funcionalidades) dentro de la misma section-proyecto */
+.section-proyecto .container-funcionalidades { margin-top: 56px; }
 
 .feature-grid {
   display: grid;
@@ -471,11 +496,11 @@
 }
 
 .site-footer {
-  padding: 28px 0;
+  padding: 14px 0;
   border-top: 1px solid var(--c-border);
   background: var(--c-surface);
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   color: var(--c-text-faint);
 }
 

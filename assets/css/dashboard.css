@@ -2,6 +2,14 @@
    dashboard.css — Layout de paneles (profesor / secretaría / admin)
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+
+.app-layout,
+.app-layout :not(i) {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+}
+
 .app-layout {
   min-height: 100dvh;
   display: grid;
@@ -9,16 +17,47 @@
   grid-template-rows: 100dvh;
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Paleta por rol ----------
+   Cada dashboard (secretaría / profesor / alumno / admin) define su propia
+   identidad de color. El logo SCAN nunca se ve afectado por esto: no se le
+   aplica ningún filtro de color, solo cambia el fondo del sidebar y los
+   acentos (botones, estados activos, avatares) alrededor de él. */
+.app-layout.role-secretaria {
+  --sidebar-bg: #062B63;
+  --primary: #3BAEF5;
+  --primary-hover: #2598E6;
+}
+.app-layout.role-profesor {
+  --sidebar-bg: #005F67;
+  --primary: #74E4D6;
+  --primary-hover: #22C7B8;
+}
+.app-layout.role-alumno {
+  --sidebar-bg: #4A001D;
+  --primary: #E785A7;
+  --primary-hover: #D96B94;
+}
+.app-layout.role-admin {
+  --sidebar-bg: #476483;
+  --primary: #A9C0D9;
+  --primary-hover: #8FAEC9;
+}
+
+/* ---------- Sidebar (tarjeta flotante) ---------- */
 .sidebar {
-  background: var(--c-primary);
+  background: var(--sidebar-bg, var(--c-primary));
   color: #cfd6e6;
   display: flex;
   flex-direction: column;
   padding: 20px 16px;
   position: sticky;
-  top: 0;
-  height: 100dvh;
+  top: 12px;
+  height: calc(100dvh - 24px);
+  margin: 12px;
+  border-radius: 20px;
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(255, 255, 255, 0.05) inset;
   overflow-y: auto;
 }
 
@@ -30,14 +69,14 @@
 }
 .sidebar-brand img { width: 38px; height: 38px; }
 .sidebar-brand .name { font-weight: 800; color: #fff; font-size: 1.05rem; line-height: 1.1; }
-.sidebar-brand .sub { font-size: 0.72rem; color: var(--c-primary-300); }
+.sidebar-brand .sub { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }
 
 .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .sidebar-nav .nav-label {
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--c-primary-300);
+  color: rgba(255, 255, 255, 0.55);
   padding: 14px 12px 6px;
   font-weight: 700;
 }
@@ -53,10 +92,10 @@
   transition: background var(--t-fast), color var(--t-fast);
 }
 .sidebar-nav a i { width: 18px; text-align: center; font-size: 0.95rem; }
-.sidebar-nav a:hover { background: var(--c-primary-700); color: #fff; }
+.sidebar-nav a:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 .sidebar-nav a.active {
-  background: var(--c-accent);
-  color: #06283d;
+  background: var(--primary, var(--c-accent));
+  color: var(--c-primary);
 }
 
 .sidebar-user {
@@ -66,30 +105,72 @@
   padding: 12px;
   margin-top: 12px;
   border-radius: var(--r-md);
-  background: var(--c-primary-700);
+  background: rgba(255, 255, 255, 0.08);
 }
 .sidebar-user .avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: var(--c-accent); color: var(--c-primary);
+  background: var(--primary, var(--c-accent)); color: var(--c-primary);
   display: grid; place-items: center; font-weight: 800; font-size: 0.95rem;
   flex-shrink: 0;
   object-fit: cover; /* cuando el avatar es una <img> con foto de perfil */
 }
 .sidebar-user .meta { min-width: 0; flex: 1; }
 .sidebar-user .meta .u-name { color: #fff; font-weight: 700; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-user .meta .u-role { font-size: 0.74rem; color: var(--c-primary-300); }
+.sidebar-user .meta .u-role { font-size: 0.74rem; color: rgba(255, 255, 255, 0.55); }
 .sidebar-user .logout { color: #cfd6e6; padding: 6px; }
-.sidebar-user .logout:hover { color: var(--c-accent); }
+.sidebar-user .logout:hover { color: var(--primary, var(--c-accent)); }
+
+/* ---------- Acentos de contenido según el rol ----------
+   Se aplican solo cuando .app-layout tiene una clase role-* (así --primary
+   siempre está definido acá dentro; nunca queda un botón con texto invisible
+   por falta de la variable). El logo no usa ninguna de estas reglas. */
+.app-layout[class*="role-"] .btn-primary {
+  background: var(--primary);
+  color: var(--c-primary);
+}
+.app-layout[class*="role-"] .btn-primary:hover { background: var(--primary-hover); }
+.app-layout[class*="role-"] .topbar .hamburger { color: var(--primary); }
+.app-layout[class*="role-"] .data-table .mini-avatar { background: var(--primary); color: var(--c-primary); }
+.app-layout[class*="role-"] .pagination .pg-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--c-primary); }
+.app-layout[class*="role-"] .pagination .pg-btn.active { background: var(--primary); color: var(--c-primary); border-color: var(--primary); }
+.app-layout[class*="role-"] .type-option input:checked + .tile { background: var(--primary); color: var(--c-primary); border-color: var(--primary); }
+.app-layout[class*="role-"] .profile-head .avatar-lg { background: var(--primary); color: var(--c-primary); }
+.app-layout[class*="role-"] .avatar-edit .avatar-edit-btn { background: var(--primary); color: var(--c-primary); }
 
 /* ---------- Main column ---------- */
 .app-main {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   height: 100dvh;
 }
 
+/* Marca de agua: el logo SCAN repetido en mosaico al estilo "wallpaper"
+   inclinado, bien tenue, fijo detrás de todo el contenido (usa la versión
+   con fondo transparente para que no se note el recorte entre repeticiones).
+   El contenedor va agrandado y descentrado para que, al rotarlo, siga
+   cubriendo toda la pantalla sin dejar triángulos sin patrón en las puntas. */
+.app-main::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -30%;
+  width: 160%;
+  height: 160%;
+  background-image: url('../img/scan-utn-watermark.png');
+  background-repeat: repeat;
+  background-size: 170px auto;
+  transform: rotate(-20deg);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   height: var(--header-h);
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border);
@@ -97,9 +178,6 @@
   align-items: center;
   gap: 14px;
   padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
 }
 .topbar .hamburger {
   display: none;
@@ -112,7 +190,7 @@
 .topbar .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .topbar .topbar-date { font-size: 0.85rem; color: var(--c-text-soft); font-weight: 600; }
 
-.app-content { padding: 26px 24px 40px; flex: 1; }
+.app-content { position: relative; padding: 26px 24px 40px; flex: 1; }
 
 .page-head {
   display: flex;
@@ -403,7 +481,9 @@
     position: fixed;
     left: 0; top: 0;
     width: 260px;
-    transform: translateX(-100%);
+    height: calc(100dvh - 24px);
+    margin: 12px;
+    transform: translateX(calc(-100% - 12px));
     transition: transform var(--t-base);
     z-index: 90;
   }
