@@ -1,0 +1,4 @@
+# Las fotos de perfil subidas por los usuarios no se versionan (son datos
+# generados en tiempo de ejecución, distintos en cada instalación/entorno).
+*
+!.gitignore

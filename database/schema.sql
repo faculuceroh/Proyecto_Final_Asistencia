@@ -47,6 +47,7 @@ CREATE TABLE usuarios (
   password   VARCHAR(255) NOT NULL,               -- hash bcrypt (password_hash)
   rol        ENUM('alumno','profesor','secretaria','admin') NOT NULL,
   curso      VARCHAR(20)  NULL,                   -- solo alumnos, ej: "1° B"
+  foto       VARCHAR(255) NULL,                   -- nombre de archivo en assets/uploads/perfiles/
   activo     TINYINT(1)   NOT NULL DEFAULT 1,
   created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

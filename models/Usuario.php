@@ -7,7 +7,7 @@ class Usuario extends BaseModel {
      */
     public static function findByLegajo($legajo) {
         $stmt = self::db()->prepare(
-            'SELECT id, nombre, apellido, password, rol, activo, email
+            'SELECT id, nombre, apellido, password, rol, activo, email, foto
              FROM usuarios WHERE legajo = ? LIMIT 1'
         );
         $stmt->execute([$legajo]);
@@ -19,7 +19,7 @@ class Usuario extends BaseModel {
      */
     public static function findById($id) {
         $stmt = self::db()->prepare(
-            'SELECT id, legajo, nombre, apellido, email, rol, curso, activo, token_recuperacion, token_expira
+            'SELECT id, legajo, nombre, apellido, email, rol, curso, foto, activo, token_recuperacion, token_expira
              FROM usuarios WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
@@ -112,6 +112,14 @@ class Usuario extends BaseModel {
     }
 
     /**
+     * Actualiza el nombre de archivo de la foto de perfil (o lo limpia con null).
+     */
+    public static function updateFoto($id, $foto) {
+        $stmt = self::db()->prepare('UPDATE usuarios SET foto = ? WHERE id = ?');
+        return $stmt->execute([$foto, $id]);
+    }
+
+    /**
      * Actualiza el token de recuperación de contraseña de un usuario.
      */
     public static function setRecoveryToken($id, $token, $expira) {
@@ -140,7 +148,7 @@ class Usuario extends BaseModel {
      */
     public static function getProfesorProfile($id) {
         $stmt = self::db()->prepare(
-            'SELECT nombre, apellido, legajo, email,
+            'SELECT nombre, apellido, legajo, email, foto,
                     (SELECT GROUP_CONCAT(nombre SEPARATOR ", ")
                      FROM materias WHERE profesor_id = u.id AND activo = 1) AS materias_str
              FROM usuarios u WHERE id = ? LIMIT 1'

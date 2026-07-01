@@ -28,7 +28,7 @@
       <a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
     </nav>
     <div class="sidebar-user">
-      <div class="avatar"><?= htmlspecialchars($iniciales) ?></div>
+      <?php if (!empty($_SESSION['foto'])): ?><img class="avatar" src="../assets/uploads/perfiles/<?= htmlspecialchars($_SESSION['foto']) ?>" alt="Foto de perfil" /><?php else: ?><div class="avatar"><?= htmlspecialchars($iniciales) ?></div><?php endif; ?>
       <div class="meta">
         <div class="u-name"><?= htmlspecialchars($_SESSION['nombre']) ?></div>
         <div class="u-role">Profesor</div>

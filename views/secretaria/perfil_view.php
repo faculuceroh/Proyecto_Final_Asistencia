@@ -30,7 +30,7 @@
       <a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
     </nav>
     <div class="sidebar-user">
-      <div class="avatar"><?= htmlspecialchars($iniciales) ?></div>
+      <?php if (!empty($_SESSION['foto'])): ?><img class="avatar" src="../assets/uploads/perfiles/<?= htmlspecialchars($_SESSION['foto']) ?>" alt="Foto de perfil" /><?php else: ?><div class="avatar"><?= htmlspecialchars($iniciales) ?></div><?php endif; ?>
       <div class="meta">
         <div class="u-name"><?= htmlspecialchars($_SESSION['nombre']) ?></div>
         <div class="u-role">Secretaría</div>
@@ -49,7 +49,17 @@
     <main class="app-content">
       <div class="card profile-card">
         <div class="profile-head">
-          <div class="avatar-lg"><?= htmlspecialchars($iniciales) ?></div>
+          <div class="avatar-edit">
+            <?php if (!empty($user['foto'])): ?>
+              <img class="avatar-lg" id="avatarPreview" src="../assets/uploads/perfiles/<?= htmlspecialchars($user['foto']) ?>" alt="Foto de perfil" />
+            <?php else: ?>
+              <div class="avatar-lg" id="avatarPreview"><?= htmlspecialchars($iniciales) ?></div>
+            <?php endif; ?>
+            <label class="avatar-edit-btn" title="Cambiar foto">
+              <i class="fa-solid fa-camera"></i>
+              <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp" />
+            </label>
+          </div>
           <div>
             <h2><?= htmlspecialchars($user['nombre'].' '.$user['apellido']) ?></h2>
             <div class="role-line">
@@ -148,6 +158,40 @@
     })
     .then(function () { App.toast('Email actualizado correctamente.', 'success'); })
     .catch(err => App.toast(err.message, 'error'));
+  });
+
+  App.qs('#fotoInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const tiposValidos = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!tiposValidos.includes(file.type)) {
+      App.toast('Formato no válido. Usá JPEG, PNG o WebP.', 'error');
+      this.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      App.toast('La foto pesa demasiado. Máximo 2 MB.', 'error');
+      this.value = '';
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('foto', file);
+
+    App.showLoader();
+    fetch('../api/actualizar_foto.php', { method: 'POST', body: fd })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Error al subir la foto');
+        return data;
+      })
+      .then(() => {
+        App.toast('Foto de perfil actualizada.', 'success');
+        setTimeout(() => location.reload(), 800);
+      })
+      .catch((err) => App.toast(err.message, 'error'))
+      .finally(() => App.hideLoader());
   });
 
   App.qs('#passForm').addEventListener('submit', function (e) {

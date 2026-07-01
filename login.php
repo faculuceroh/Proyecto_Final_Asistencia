@@ -25,7 +25,7 @@ if ($legajo === '' || $password === '') {
 // Busca el usuario en la base de datos
 try {
     $stmt = getPDO()->prepare(
-        'SELECT id, nombre, apellido, password, rol, activo
+        'SELECT id, nombre, apellido, password, rol, activo, foto
          FROM usuarios WHERE legajo = ? LIMIT 1'
     );
     $stmt->execute([$legajo]);
@@ -61,6 +61,7 @@ $destinos = [
 $_SESSION['usuario_id'] = (int) $user['id'];
 $_SESSION['nombre']     = $user['nombre'] . ' ' . $user['apellido'];
 $_SESSION['rol']        = $user['rol'];
+$_SESSION['foto']       = $user['foto'];
 
 echo json_encode([
     'ok'     => true,
