@@ -258,9 +258,18 @@
           <span class="pg-info">Mostrando <?= $offset+1 ?>–<?= min($offset+$por_pag,$total) ?> de <?= $total ?></span>
           <div class="pg-controls">
             <a href="<?= url_pag(max(1,$pagina-1)) ?>" class="pg-btn <?= $pagina<=1?'disabled':'' ?>"><i class="fa-solid fa-chevron-left"></i></a>
-            <?php for($i=1;$i<=$total_paginas;$i++): ?>
-              <a href="<?= url_pag($i) ?>" class="pg-btn <?= $i===$pagina?'active':'' ?>"><?= $i ?></a>
-            <?php endfor; ?>
+            <?php
+            $rango = get_page_range($pagina, $total_paginas);
+            foreach ($rango as $p):
+                if ($p === '…'):
+            ?>
+                <span class="pg-btn" style="cursor: default; border-color: transparent;">…</span>
+            <?php else: ?>
+                <a href="<?= url_pag($p) ?>" class="pg-btn <?= $p === $pagina ? 'active' : '' ?>"><?= $p ?></a>
+            <?php
+                endif;
+            endforeach;
+            ?>
             <a href="<?= url_pag(min($total_paginas,$pagina+1)) ?>" class="pg-btn <?= $pagina>=$total_paginas?'disabled':'' ?>"><i class="fa-solid fa-chevron-right"></i></a>
           </div>
         </div>

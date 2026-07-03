@@ -14,6 +14,10 @@ if (!$clase_id) { header('Location: dashboard.php'); exit; }
 $clase = Clase::getById($clase_id);
 
 if (!$clase) { header('Location: dashboard.php'); exit; }
+if ($clase['modalidad'] === 'virtual') {
+    header('Location: importar_teams.php?clase_id=' . $clase_id);
+    exit;
+}
 if ($clase['estado'] === 'finalizada') { header('Location: dashboard.php'); exit; }
 
 // Obtener detalles del profesor asignado a la materia

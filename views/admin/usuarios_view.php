@@ -112,10 +112,17 @@
       <div class="card table-card">
         <div class="toolbar" style="padding:16px 16px 0">
           <h3 style="font-size:1rem">Todos los usuarios</h3>
-          <form method="GET" style="display:flex;gap:8px">
-            <input class="input" name="buscar" value="<?= htmlspecialchars($buscar) ?>" placeholder="Buscar por nombre o legajo..." style="min-width:240px" />
+          <form method="GET" style="display:flex;gap:8px;align-items:center">
+            <select class="select" name="rol" style="height:38px;font-size:0.86rem;padding:0 12px;min-width:140px;margin:0">
+              <option value="">Todos los roles</option>
+              <option value="alumno" <?= $rol_filtro === 'alumno' ? 'selected' : '' ?>>Alumnos</option>
+              <option value="profesor" <?= $rol_filtro === 'profesor' ? 'selected' : '' ?>>Profesores</option>
+              <option value="secretaria" <?= $rol_filtro === 'secretaria' ? 'selected' : '' ?>>Secretaría</option>
+              <option value="admin" <?= $rol_filtro === 'admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
+            <input class="input" name="buscar" value="<?= htmlspecialchars($buscar) ?>" placeholder="Buscar por nombre o legajo..." style="min-width:240px;margin:0" />
             <button type="submit" class="btn btn-ghost btn-sm"><i class="fa-solid fa-magnifying-glass"></i></button>
-            <?php if ($buscar): ?><a href="usuarios.php" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></a><?php endif; ?>
+            <?php if ($buscar || $rol_filtro): ?><a href="usuarios.php" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></a><?php endif; ?>
           </form>
         </div>
         <div class="table-scroll">
@@ -141,9 +148,18 @@
           <span class="pg-info">Mostrando <?= $offset+1 ?>&ndash;<?= min($offset+$por_pagina,$total_usuarios) ?> de <?= $total_usuarios ?></span>
           <div class="pg-controls">
             <a href="<?= url_pag_u(max(1,$pagina-1)) ?>" class="pg-btn <?= $pagina<=1?'disabled':'' ?>"><i class="fa-solid fa-chevron-left"></i></a>
-            <?php for ($i=1;$i<=$total_paginas;$i++): ?>
-              <a href="<?= url_pag_u($i) ?>" class="pg-btn <?= $i===$pagina?'active':'' ?>"><?= $i ?></a>
-            <?php endfor; ?>
+            <?php
+            $rango = get_page_range($pagina, $total_paginas);
+            foreach ($rango as $p):
+                if ($p === '…'):
+            ?>
+                <span class="pg-btn" style="cursor: default; border-color: transparent;">…</span>
+            <?php else: ?>
+                <a href="<?= url_pag_u($p) ?>" class="pg-btn <?= $p === $pagina ? 'active' : '' ?>"><?= $p ?></a>
+            <?php
+                endif;
+            endforeach;
+            ?>
             <a href="<?= url_pag_u(min($total_paginas,$pagina+1)) ?>" class="pg-btn <?= $pagina>=$total_paginas?'disabled':'' ?>"><i class="fa-solid fa-chevron-right"></i></a>
           </div>
         </div>

@@ -52,6 +52,7 @@
     </header>
 
     <main class="app-content">
+      <div style="max-width: 1200px; margin: 0 auto;">
 
       <!-- ── Cards de resumen ── -->
       <div class="stat-grid">
@@ -73,13 +74,20 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start" class="admin-grid">
+      <div class="admin-grid">
 
         <!-- ── Tabla de usuarios ── -->
         <div class="card table-card">
-          <div class="toolbar" style="padding:16px 16px 0;margin:0">
+          <div class="toolbar" style="padding:16px 16px 0;margin:0;gap:12px">
             <h3 style="font-size:1.05rem">Usuarios</h3>
             <div class="spacer"></div>
+            <select class="select" id="filtroRol" style="height:38px;font-size:0.86rem;padding:0 12px;min-width:140px">
+              <option value="">Todos los roles</option>
+              <option value="alumno" <?= $rol_filtro === 'alumno' ? 'selected' : '' ?>>Alumnos</option>
+              <option value="profesor" <?= $rol_filtro === 'profesor' ? 'selected' : '' ?>>Profesores</option>
+              <option value="secretaria" <?= $rol_filtro === 'secretaria' ? 'selected' : '' ?>>Secretaría</option>
+              <option value="admin" <?= $rol_filtro === 'admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
             <input class="input" type="search" id="buscarUsuario"
                    placeholder="Buscar por nombre o legajo…" style="min-width:200px"
                    value="<?= htmlspecialchars($buscar) ?>" />
@@ -87,7 +95,12 @@
           <div class="table-scroll">
             <table class="data-table">
               <thead>
-                <tr><th>Usuario</th><th>Legajo</th><th>Rol</th><th>Estado</th><th>Activo</th></tr>
+                <tr>
+                  <th>Usuario</th>
+                  <th style="width: 160px;">Rol</th>
+                  <th style="width: 130px;">Estado</th>
+                  <th style="width: 100px; text-align: center;">Activo</th>
+                </tr>
               </thead>
               <tbody id="tablaUsuarios">
               <?php foreach ($usuarios as $u): ?>
@@ -99,19 +112,21 @@
                 ?>
                 <tr>
                   <td>
-                    <div class="cell-name">
+                    <div class="cell-name" style="display: flex; align-items: center; gap: 10px;">
                       <span class="mini-avatar"><?= htmlspecialchars($ini) ?></span>
-                      <?= htmlspecialchars($nombre_completo) ?>
+                      <div>
+                        <div style="font-weight: 600; color: var(--c-text);"><?= htmlspecialchars($nombre_completo) ?></div>
+                        <small class="text-muted" style="font-size: 0.78rem; font-weight: 500; display: block; margin-top: 2px;">Legajo: <?= htmlspecialchars($u['legajo']) ?></small>
+                      </div>
                     </div>
                   </td>
-                  <td><?= htmlspecialchars($u['legajo']) ?></td>
                   <td><span class="badge <?= $rol_badge ?>"><?= $rol_label ?></span></td>
                   <td>
                     <span class="badge <?= $u['activo'] ? 'badge-success' : 'badge-danger' ?>">
                       <?= $u['activo'] ? 'Activo' : 'Inactivo' ?>
                     </span>
                   </td>
-                  <td>
+                  <td style="text-align: center;">
                     <label class="switch">
                       <input type="checkbox" class="toggle-usuario"
                              data-id="<?= $u['id'] ?>"
@@ -130,7 +145,13 @@
 
           <!-- Paginación -->
           <?php
-            $qs = $buscar ? '&buscar=' . urlencode($buscar) : '';
+            $qs = '';
+            if ($buscar !== '') {
+                $qs .= '&buscar=' . urlencode($buscar);
+            }
+            if ($rol_filtro !== '') {
+                $qs .= '&rol=' . urlencode($rol_filtro);
+            }
             $mostrar_desde = $total_usuarios > 0 ? $offset + 1 : 0;
           ?>
           <div class="pagination">
@@ -147,11 +168,20 @@
                  class="pg-btn <?= $pagina <= 1 ? 'disabled' : '' ?>">
                 <i class="fa-solid fa-chevron-left"></i>
               </a>
-              <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                <a href="?pagina=<?= $i . $qs ?>" class="pg-btn <?= $i === $pagina ? 'active' : '' ?>">
-                  <?= $i ?>
-                </a>
-              <?php endfor; ?>
+              <?php
+              $rango = get_page_range($pagina, $total_paginas);
+              foreach ($rango as $p):
+                  if ($p === '…'):
+              ?>
+                  <span class="pg-btn" style="cursor: default; border-color: transparent;">…</span>
+              <?php else: ?>
+                  <a href="?pagina=<?= $p . $qs ?>" class="pg-btn <?= $p === $pagina ? 'active' : '' ?>">
+                    <?= $p ?>
+                  </a>
+              <?php
+                  endif;
+              endforeach;
+              ?>
               <a href="?pagina=<?= min($total_paginas, $pagina + 1) . $qs ?>"
                  class="pg-btn <?= $pagina >= $total_paginas ? 'disabled' : '' ?>">
                 <i class="fa-solid fa-chevron-right"></i>
@@ -160,61 +190,9 @@
           </div>
         </div>
 
-        <!-- ── Cargar alumnos ── -->
-        <div class="card" style="padding:22px">
-          <h3 style="font-size:1.05rem;margin-bottom:4px">Cargar alumnos</h3>
-          <p class="text-muted" style="font-size:0.86rem;margin-bottom:18px">
-            Importá un Excel o cargá un alumno manualmente.
-          </p>
 
-          <label class="card" id="dropZone"
-                 style="display:block;border:2px dashed var(--c-border);background:var(--c-bg);
-                        padding:24px;text-align:center;cursor:pointer;border-radius:14px">
-            <i class="fa-solid fa-file-excel" style="font-size:1.8rem;color:var(--c-success)"></i>
-            <div style="font-weight:700;margin-top:8px">Subir archivo Excel</div>
-            <div class="text-muted" style="font-size:0.82rem">.xlsx o .csv — arrastrá o hacé clic</div>
-            <input type="file" accept=".xlsx,.csv" hidden id="fileInput" />
-          </label>
-          <div id="fileName" class="text-muted mt-1" style="font-size:0.84rem"></div>
 
-          <div style="display:flex;align-items:center;gap:10px;margin:18px 0;
-                      color:var(--c-text-faint);font-size:0.8rem">
-            <span style="flex:1;height:1px;background:var(--c-border)"></span>
-            o cargá manual
-            <span style="flex:1;height:1px;background:var(--c-border)"></span>
-          </div>
-
-          <form id="manualForm">
-            <div class="field">
-              <label>Nombre</label>
-              <input class="input" name="nombre" placeholder="Ej: Juan" required />
-            </div>
-            <div class="field">
-              <label>Apellido</label>
-              <input class="input" name="apellido" placeholder="Ej: Pérez" required />
-            </div>
-            <div class="field">
-              <label>Legajo</label>
-              <input class="input" name="legajo" placeholder="Ej: 20460" inputmode="numeric" required />
-            </div>
-            <div class="field">
-              <label>Curso</label>
-              <select class="select" name="curso">
-                <?php foreach ($cursos as $c): ?>
-                  <option><?= htmlspecialchars($c) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="field">
-              <label>Email institucional</label>
-              <input class="input" type="email" name="email" placeholder="Ej: jperez@instituto.edu" />
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fa-solid fa-user-plus"></i> Agregar alumno
-            </button>
-          </form>
-        </div>
-
+      </div>
       </div>
     </main>
   </div>
@@ -241,40 +219,19 @@
     });
   });
 
-  // ── Alta manual de alumno ──
-  App.qs('#manualForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(this));
-    App.api('../api/crear_usuario.php', {
-      method: 'POST',
-      loader: true,
-      body: JSON.stringify({ tipo: 'alumno', ...data }),
-    })
-    .then(function () {
-      App.toast('Alumno agregado correctamente.', 'success');
-      App.qs('#manualForm').reset();
-      setTimeout(() => location.reload(), 1000);
-    })
-    .catch(function (err) {
-      App.toast(err.message, 'error');
-    });
-  });
 
-  // ── Importar Excel ──
-  App.qs('#fileInput').addEventListener('change', function () {
-    if (!this.files[0]) return;
-    App.qs('#fileName').textContent = '📄 ' + this.files[0].name;
-    const form = new FormData();
-    form.append('archivo', this.files[0]);
-    fetch('../api/importar_alumnos.php', { method: 'POST', body: form })
-      .then(r => r.json())
-      .then(function (d) {
-        App.toast('Importados: ' + d.creados + ' alumnos.', 'success');
-        setTimeout(() => location.reload(), 1200);
-      })
-      .catch(function () {
-        App.toast('Error al importar el archivo.', 'error');
-      });
+
+  // ── Filtro por Rol ──
+  App.qs('#filtroRol').addEventListener('change', function () {
+    const rol = this.value;
+    const url = new URL(window.location.href);
+    if (rol) {
+      url.searchParams.set('rol', rol);
+    } else {
+      url.searchParams.delete('rol');
+    }
+    url.searchParams.set('pagina', '1');
+    window.location.href = url.toString();
   });
 
   // ── Búsqueda server-side (con debounce) ──

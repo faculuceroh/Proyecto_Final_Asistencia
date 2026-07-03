@@ -160,7 +160,11 @@
               </div>
             </div>
             <div class="class-actions">
-              <?php if ($finalizada): ?>
+              <?php if ($c['modalidad'] === 'virtual'): ?>
+                <a href="importar_teams.php?clase_id=<?= $c['id'] ?>" class="btn <?= $finalizada ? 'btn-ghost' : 'btn-accent' ?> btn-sm">
+                  <i class="fa-brands fa-microsoft"></i> <?= $finalizada ? 'Re-importar Teams' : 'Importar Teams' ?>
+                </a>
+              <?php elseif ($finalizada): ?>
                 <button class="btn btn-ghost btn-sm" disabled>
                   <i class="fa-solid fa-qrcode"></i> Tomar asistencia
                 </button>

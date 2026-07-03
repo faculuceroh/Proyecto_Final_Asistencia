@@ -81,8 +81,10 @@
                 · <?= date('d/m/Y', strtotime($c['fecha'])) ?>
                 <?= htmlspecialchars($c['hora_inicio']) ?>
                 (<?= (int)$c['duracion_min'] ?> min)
-                <?php if ($c['estado'] !== 'finalizada'): ?>
-                  — <?= htmlspecialchars($c['estado']) ?>
+                <?php if ($c['estado'] === 'finalizada'): ?>
+                  — Cargada (Finalizada)
+                <?php else: ?>
+                  — <?= htmlspecialchars(ucfirst($c['estado'])) ?>
                 <?php endif; ?>
               </option>
               <?php endforeach; ?>

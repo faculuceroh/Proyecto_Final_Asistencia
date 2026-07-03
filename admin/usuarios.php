@@ -9,40 +9,48 @@ $cursos = $pdo->query("SELECT nombre FROM cursos ORDER BY nombre")->fetchAll(PDO
 $por_pagina = 15;
 $pagina     = max(1, (int)($_GET['pagina'] ?? 1));
 $buscar     = trim($_GET['buscar'] ?? '');
+$rol_filtro = trim($_GET['rol'] ?? '');
 $offset     = ($pagina - 1) * $por_pagina;
 
-if ($buscar) {
+$condiciones = ["activo = 1"];
+$params = [];
+
+if ($buscar !== '') {
+    $condiciones[] = "(nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?)";
     $like = '%' . $buscar . '%';
-    $cnt  = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE (nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?) AND activo=1");
-    $cnt->execute([$like, $like, $like]);
-} else {
-    $cnt = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE activo=1");
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
 }
-$total_usuarios = (int)$cnt->fetchColumn();
+
+if ($rol_filtro !== '' && in_array($rol_filtro, ['alumno', 'profesor', 'secretaria', 'admin'], true)) {
+    $condiciones[] = "rol = ?";
+    $params[] = $rol_filtro;
+}
+
+$where_clause = 'WHERE ' . implode(' AND ', $condiciones);
+
+// Obtener total
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios $where_clause");
+$stmt->execute($params);
+$total_usuarios = (int)$stmt->fetchColumn();
 $total_paginas  = max(1, (int)ceil($total_usuarios / $por_pagina));
 
-if ($buscar) {
-    $like = '%' . $buscar . '%';
-    $stmt = $pdo->prepare(
-        "SELECT id, legajo, nombre, apellido, rol, curso FROM usuarios
-         WHERE (nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?) AND activo=1
-         ORDER BY apellido, nombre LIMIT ? OFFSET ?"
-    );
-    $stmt->bindValue(1, $like);
-    $stmt->bindValue(2, $like);
-    $stmt->bindValue(3, $like);
-    $stmt->bindValue(4, $por_pagina, PDO::PARAM_INT);
-    $stmt->bindValue(5, $offset, PDO::PARAM_INT);
-    $stmt->execute();
-} else {
-    $stmt = $pdo->prepare(
-        "SELECT id, legajo, nombre, apellido, rol, curso FROM usuarios
-         WHERE activo=1 ORDER BY created_at DESC LIMIT ? OFFSET ?"
-    );
-    $stmt->bindValue(1, $por_pagina, PDO::PARAM_INT);
-    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-    $stmt->execute();
+// Obtener usuarios
+$stmt = $pdo->prepare(
+    "SELECT id, legajo, nombre, apellido, rol, curso FROM usuarios
+     $where_clause
+     ORDER BY created_at DESC LIMIT ? OFFSET ?"
+);
+
+// Enlazar parámetros dinámicos
+$idx = 1;
+foreach ($params as $param) {
+    $stmt->bindValue($idx++, $param);
 }
+$stmt->bindValue($idx++, $por_pagina, PDO::PARAM_INT);
+$stmt->bindValue($idx++, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $badge_rol = [

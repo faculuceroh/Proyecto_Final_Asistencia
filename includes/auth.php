@@ -34,3 +34,26 @@ function _redirigir_login(): void
     header('Location: ' . $base . 'index.php?redirect=' . $redirect);
     exit;
 }
+
+/**
+ * Calcula un rango inteligente de páginas a mostrar en los controles de paginación
+ * para evitar mostrar excesivas páginas (ej. 1 ... 4 5 6 ... 50).
+ *
+ * @param int $current Página actual.
+ * @param int $total Total de páginas.
+ * @return array Lista de números de página y el separador '…'.
+ */
+function get_page_range(int $current, int $total): array
+{
+    if ($total <= 7) {
+        return range(1, $total);
+    }
+    if ($current <= 4) {
+        return [1, 2, 3, 4, 5, '…', $total];
+    }
+    if ($current >= $total - 3) {
+        return [1, '…', $total - 4, $total - 3, $total - 2, $total - 1, $total];
+    }
+    return [1, '…', $current - 1, $current, $current + 1, '…', $total];
+}
+
