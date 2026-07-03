@@ -67,7 +67,7 @@ CREATE TABLE materias (
   nombre      VARCHAR(150) NOT NULL,
   codigo      VARCHAR(30)  NOT NULL UNIQUE,        -- ej: "PROG2-1B"
   curso       VARCHAR(20)  NOT NULL,               -- ej: "1° B"
-  modalidad   ENUM('presencial','virtual') NOT NULL DEFAULT 'presencial',
+  modalidad   ENUM('presencial','virtual','hibrida') NOT NULL DEFAULT 'presencial',
   profesor_id INT UNSIGNED NULL,
   activo      TINYINT(1)   NOT NULL DEFAULT 1,
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -105,7 +105,7 @@ CREATE TABLE clases (
   hora_inicio  TIME           NOT NULL,
   duracion_min SMALLINT UNSIGNED NOT NULL DEFAULT 90,
   aula         VARCHAR(50)    NULL,               -- NULL si es virtual
-  modalidad    ENUM('presencial','virtual') NOT NULL DEFAULT 'presencial',
+  modalidad    ENUM('presencial','virtual','hibrida') NOT NULL DEFAULT 'presencial',
   estado       ENUM('pendiente','en_curso','finalizada') NOT NULL DEFAULT 'pendiente',
   created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE CASCADE,
