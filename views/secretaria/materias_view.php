@@ -42,7 +42,7 @@
       <button class="hamburger" data-sidebar-toggle aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
       <div class="page-title">Materias <small>Creá materias con horario semanal fijo</small></div>
     </header>
-    <main class="app-content" style="padding:16px;overflow-y:auto">
+    <main class="app-content" style="padding:16px">
       <div class="mat-layout">
 
         <!-- ── Formulario ────────────────────────────────────── -->

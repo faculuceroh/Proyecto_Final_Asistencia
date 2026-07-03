@@ -103,6 +103,17 @@ class Usuario extends BaseModel {
     }
 
     /**
+     * Actualiza los datos básicos de un usuario (corrección de errores de
+     * carga). No toca password, rol ni activo.
+     */
+    public static function update($id, $legajo, $nombre, $apellido, $email, $curso) {
+        $stmt = self::db()->prepare(
+            'UPDATE usuarios SET legajo = ?, nombre = ?, apellido = ?, email = ?, curso = ? WHERE id = ?'
+        );
+        return $stmt->execute([$legajo, $nombre, $apellido, $email, $curso, $id]);
+    }
+
+    /**
      * Actualiza la contraseña de un usuario.
      */
     public static function updatePassword($id, $newPassword) {

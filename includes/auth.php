@@ -45,6 +45,9 @@ function _redirigir_login(): void
  */
 function get_page_range(int $current, int $total): array
 {
+    if ($total <= 0) {
+        return [];
+    }
     if ($total <= 7) {
         return range(1, $total);
     }

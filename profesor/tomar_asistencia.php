@@ -18,6 +18,9 @@ if ($clase['modalidad'] === 'virtual') {
     header('Location: importar_teams.php?clase_id=' . $clase_id);
     exit;
 }
+// Clase híbrida: todavía no se eligió presencial/virtual. Hay que pasar
+// primero por "Elegir modalidad y dar clase" en el dashboard.
+if ($clase['modalidad'] === 'hibrida') { header('Location: dashboard.php'); exit; }
 if ($clase['estado'] === 'finalizada') { header('Location: dashboard.php'); exit; }
 
 // Obtener detalles del profesor asignado a la materia

@@ -71,7 +71,14 @@
 .sidebar-brand .name { font-weight: 800; color: #fff; font-size: 1.05rem; line-height: 1.1; }
 .sidebar-brand .sub { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }
 
-.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+/* min-height:0 evita que, por defecto, un hijo flex nunca se achique más
+   allá de la altura de su propio contenido (si no, un menú corto igual
+   fuerza al sidebar a desbordar por unos pixeles y muestra una scrollbar
+   que no hace falta). El scroll queda acá, en el menú, y no en .sidebar
+   completo: así, si un rol tiene tantas opciones que no entran, se desliza
+   solo la lista de links, y el logo de arriba y la tarjeta de usuario de
+   abajo quedan siempre visibles en su lugar. */
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 0; overflow-y: auto; }
 .sidebar-nav .nav-label {
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -143,21 +150,29 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden; /* el ::before del watermark mide 160% y si no, agrega scroll horizontal */
   height: 100dvh;
 }
 
 /* Marca de agua: el logo SCAN repetido en mosaico al estilo "wallpaper"
    inclinado, bien tenue, fijo detrás de todo el contenido (usa la versión
    con fondo transparente para que no se note el recorte entre repeticiones).
-   El contenedor va agrandado y descentrado para que, al rotarlo, siga
-   cubriendo toda la pantalla sin dejar triángulos sin patrón en las puntas. */
+   Va con position:fixed (anclado a la ventana, no a .app-main) a propósito:
+   como .app-main es el contenedor con scroll, un ::before absoluto y
+   sobredimensionado (necesario para cubrir las puntas al rotarlo) agrandaba
+   el área de scroll de la página, dejando un hueco vacío enorme en páginas
+   con poco contenido. Fixed queda afuera del cálculo de overflow de
+   cualquier ancestro, así nunca puede alargar el scroll.
+   "left" arranca después del sidebar para no dibujarse encima (en desktop
+   el sidebar es más angosto que --sidebar-w y flota con su propio fondo,
+   pero por orden en el DOM el watermark se pintaría arriba si no se recorta). */
 .app-main::before {
   content: "";
-  position: absolute;
-  top: -30%;
-  left: -30%;
-  width: 160%;
-  height: 160%;
+  position: fixed;
+  top: -15%;
+  left: var(--sidebar-w);
+  right: -15%;
+  bottom: -15%;
   background-image: url('../img/scan-utn-watermark.png');
   background-repeat: repeat;
   background-size: 170px auto;
@@ -165,6 +180,9 @@
   opacity: 0.06;
   pointer-events: none;
   z-index: 0;
+}
+@media (max-width: 900px) {
+  .app-main::before { left: -15%; }
 }
 
 .topbar {
@@ -342,9 +360,12 @@
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--t-fast); background: var(--c-surface);
 }
-.pagination .pg-btn:hover:not(:disabled) { border-color: var(--c-primary); color: var(--c-primary); }
+.pagination .pg-btn:hover:not(:disabled):not(.disabled) { border-color: var(--c-primary); color: var(--c-primary); }
 .pagination .pg-btn.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
-.pagination .pg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+/* :disabled solo aplica a controles de formulario; los pg-btn de paginación
+   son <a>, así que también necesitan la variante de clase para verse apagados. */
+.pagination .pg-btn:disabled,
+.pagination .pg-btn.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
 /* ---------- Barra de progreso (asistencia %) ---------- */
 .progress {
