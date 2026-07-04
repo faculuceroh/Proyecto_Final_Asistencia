@@ -218,7 +218,7 @@
     <h2 style="font-size:1.2rem;margin-bottom:8px" id="resTitle"></h2>
     <p class="text-muted" id="resBody" style="font-size:0.9rem;margin-bottom:20px"></p>
     <div style="display:flex;gap:10px;justify-content:center">
-      <a href="exportar.php" class="btn btn-primary">Ver clases</a>
+      <a href="exportar.php?materia_id=<?= $materia_id ?>" class="btn btn-primary">Ver clases</a>
       <a href="materias.php" class="btn btn-ghost">Volver</a>
     </div>
   </div>

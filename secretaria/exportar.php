@@ -10,12 +10,12 @@ $pdo = getPDO();
 
 // ── Filtros ───────────────────────────────────────────────────
 $f_profesor = (int) ($_GET['profesor'] ?? 0) ?: null;
-$f_materia  = (int) ($_GET['materia']  ?? 0) ?: null;
+$f_materia  = (int) ($_GET['materia']  ?? $_GET['materia_id'] ?? 0) ?: null;
 $f_fecha    = $_GET['fecha'] ?? '';
 $f_estado   = in_array($_GET['estado'] ?? '', ['pendiente','en_curso','finalizada']) ? $_GET['estado'] : '';
 $clase_id   = (int) ($_GET['clase_id'] ?? 0) ?: null;
 $pagina     = max(1, (int) ($_GET['pagina'] ?? 1));
-$por_pag    = 15;
+$por_pag    = 10;
 $offset     = ($pagina - 1) * $por_pag;
 
 // ── Vista detalle de una clase ────────────────────────────────
@@ -23,6 +23,12 @@ $clase_detalle = null;
 $alumnos_clase = [];
 $badge_asist   = ['presente'=>'badge-success','tardanza'=>'badge-warning','ausente'=>'badge-danger'];
 $label_asist   = ['presente'=>'Presente','tardanza'=>'Tardanza','ausente'=>'Ausente'];
+
+$pagina_alumnos = max(1, (int) ($_GET['pagina_alumnos'] ?? 1));
+$por_pag_alumnos = 10;
+$offset_alumnos = ($pagina_alumnos - 1) * $por_pag_alumnos;
+$total_alumnos = 0;
+$total_paginas_alumnos = 1;
 
 if ($clase_id) {
     $clase_detalle = Clase::getById($clase_id);
@@ -39,7 +45,15 @@ if ($clase_id) {
         $prof_row = $stmt->fetch();
         $clase_detalle['profesor'] = $prof_row ? $prof_row['profesor'] : '—';
 
-        // Alumnos inscriptos con su estado de asistencia actual en esta clase
+        // Contar alumnos inscriptos
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM inscripciones WHERE materia_id = ?"
+        );
+        $stmt->execute([$clase_detalle['materia_id']]);
+        $total_alumnos = (int) $stmt->fetchColumn();
+        $total_paginas_alumnos = max(1, (int) ceil($total_alumnos / $por_pag_alumnos));
+
+        // Alumnos inscriptos con su estado de asistencia actual en esta clase (paginado)
         $stmt = $pdo->prepare(
             "SELECT u.apellido, u.nombre, u.legajo,
                     COALESCE(a.estado, 'ausente') AS estado,
@@ -48,9 +62,14 @@ if ($clase_id) {
              JOIN usuarios u ON u.id = i.alumno_id
              LEFT JOIN asistencias a ON a.alumno_id = i.alumno_id AND a.clase_id = ?
              WHERE i.materia_id = ?
-             ORDER BY u.apellido, u.nombre"
+             ORDER BY u.apellido, u.nombre
+             LIMIT ? OFFSET ?"
         );
-        $stmt->execute([$clase_id, $clase_detalle['materia_id']]);
+        $stmt->bindValue(1, $clase_id, PDO::PARAM_INT);
+        $stmt->bindValue(2, $clase_detalle['materia_id'], PDO::PARAM_INT);
+        $stmt->bindValue(3, $por_pag_alumnos, PDO::PARAM_INT);
+        $stmt->bindValue(4, $offset_alumnos, PDO::PARAM_INT);
+        $stmt->execute();
         $alumnos_clase = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
@@ -65,58 +84,115 @@ $materias_lista = $pdo->query(
     "SELECT id, nombre FROM materias WHERE activo=1 ORDER BY nombre"
 )->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Stats globales ────────────────────────────────────────────
-$total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases")->fetchColumn();
-$total_pres    = (int) $pdo->query("SELECT COUNT(*) FROM asistencias WHERE estado IN ('presente','tardanza')")->fetchColumn();
-$total_aus     = (int) $pdo->query("SELECT COUNT(*) FROM asistencias WHERE estado='ausente'")->fetchColumn();
-$prom_asist    = $pdo->query(
-    "SELECT ROUND(SUM(estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1) FROM asistencias"
-)->fetchColumn() ?? 0;
-
-// ── Tabla de clases con filtros ───────────────────────────────
-$where  = "WHERE c.fecha <= CURDATE()";
-$params = [];
-
-if ($f_profesor) { $where .= ' AND m.profesor_id = ?';  $params[] = $f_profesor; }
-if ($f_materia)  { $where .= ' AND c.materia_id  = ?';  $params[] = $f_materia; }
-if ($f_fecha)    { $where .= ' AND c.fecha        = ?';  $params[] = $f_fecha; }
-if ($f_estado)   { $where .= ' AND c.estado       = ?';  $params[] = $f_estado; }
-
-$stmt = $pdo->prepare(
-    "SELECT COUNT(*) FROM clases c JOIN materias m ON m.id=c.materia_id $where"
-);
-$stmt->execute($params);
-$total         = (int) $stmt->fetchColumn();
-$total_paginas = max(1, (int) ceil($total / $por_pag));
-
-$stmt = $pdo->prepare(
-    "SELECT c.id, c.estado, c.hora_inicio,
-            m.nombre AS materia, m.curso,
-            CONCAT(u.nombre,' ',u.apellido) AS profesor,
-            c.fecha,
-            COUNT(DISTINCT i.alumno_id)                                              AS total_alum,
-            SUM(a.estado IN ('presente','tardanza'))                                  AS presentes,
-            COUNT(DISTINCT i.alumno_id)-COALESCE(SUM(a.estado IN ('presente','tardanza')),0) AS ausentes,
-            ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(DISTINCT i.alumno_id),0)*100,1) AS pct
-     FROM clases c
-     JOIN materias m ON m.id = c.materia_id
-     LEFT JOIN usuarios u ON u.id = m.profesor_id
-     LEFT JOIN inscripciones i ON i.materia_id = m.id
-     LEFT JOIN asistencias a ON a.clase_id = c.id AND a.alumno_id = i.alumno_id
-     $where
-     GROUP BY c.id
-     ORDER BY c.fecha DESC, m.nombre
-     LIMIT ? OFFSET ?"
-);
-
-// Bindeamos los parámetros de limit y offset por separado o desactivamos emulación
-$stmt->bindValue(count($params) + 1, $por_pag, PDO::PARAM_INT);
-$stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
-for ($i = 0; $i < count($params); $i++) {
-    $stmt->bindValue($i + 1, $params[$i]);
+// ── Obtener detalles de materia si corresponde ───────────────
+$materia_detalle = null;
+if ($f_materia) {
+    $stmt = $pdo->prepare("
+        SELECT m.id, m.nombre, m.codigo, m.curso, m.modalidad,
+               COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor,
+               COALESCE(CONCAT(u2.nombre,' ',u2.apellido),'') AS profesor_2
+        FROM materias m
+        LEFT JOIN usuarios u ON u.id = m.profesor_id
+        LEFT JOIN usuarios u2 ON u2.id = m.profesor_2_id
+        WHERE m.id = ? AND m.activo = 1
+    ");
+    $stmt->execute([$f_materia]);
+    $materia_detalle = $stmt->fetch(PDO::FETCH_ASSOC);
 }
-$stmt->execute();
-$clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ── Stats ─────────────────────────────────────────────────────
+if ($f_materia) {
+    // Estadísticas de la materia seleccionada
+    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE materia_id = $f_materia AND fecha <= CURDATE()")->fetchColumn();
+    $total_pres    = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.materia_id = $f_materia AND a.estado IN ('presente','tardanza') AND c.fecha <= CURDATE()")->fetchColumn();
+    $total_aus     = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.materia_id = $f_materia AND a.estado = 'ausente' AND c.fecha <= CURDATE()")->fetchColumn();
+    $prom_asist    = $pdo->query("
+        SELECT ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1)
+        FROM asistencias a
+        JOIN clases c ON c.id = a.clase_id
+        WHERE c.materia_id = $f_materia AND c.fecha <= CURDATE()
+    ")->fetchColumn() ?? 0;
+} else {
+    // Estadísticas globales (de todas las clases ocurridas hasta hoy)
+    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE fecha <= CURDATE()")->fetchColumn();
+    $total_pres    = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.fecha <= CURDATE() AND a.estado IN ('presente','tardanza')")->fetchColumn();
+    $total_aus     = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.fecha <= CURDATE() AND a.estado = 'ausente'")->fetchColumn();
+    $prom_asist    = $pdo->query("
+        SELECT ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1)
+        FROM asistencias a
+        JOIN clases c ON c.id = a.clase_id
+        WHERE c.fecha <= CURDATE()
+    ")->fetchColumn() ?? 0;
+}
+
+// ── Lista de Materias (Vista Principal) ──────────────────────
+$materias_con_stats = [];
+if (!$clase_id && !$f_materia) {
+    $materias_con_stats = $pdo->query("
+        SELECT m.id, m.nombre, m.codigo, m.curso, m.modalidad,
+               COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor,
+               COALESCE(CONCAT(u2.nombre,' ',u2.apellido),'') AS profesor_2,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE()) AS total_clases,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'finalizada') AS clases_finalizadas,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'pendiente') AS clases_pendientes,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'en_curso') AS clases_en_curso
+        FROM materias m
+        LEFT JOIN usuarios u  ON u.id  = m.profesor_id
+        LEFT JOIN usuarios u2 ON u2.id = m.profesor_2_id
+        WHERE m.activo = 1
+        ORDER BY m.nombre
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// ── Tabla de clases con filtros (Vista de Clases) ────────────
+$clases = [];
+$total = 0;
+$total_paginas = 1;
+
+if ($f_materia) {
+    $where  = "WHERE 1=1";
+    $params = [];
+
+    if ($f_profesor) { $where .= ' AND m.profesor_id = ?';  $params[] = $f_profesor; }
+    $where .= ' AND c.materia_id  = ?';  $params[] = $f_materia;
+    if ($f_fecha)    { $where .= ' AND c.fecha        = ?';  $params[] = $f_fecha; }
+    if ($f_estado)   { $where .= ' AND c.estado       = ?';  $params[] = $f_estado; }
+
+    $stmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM clases c JOIN materias m ON m.id=c.materia_id $where"
+    );
+    $stmt->execute($params);
+    $total         = (int) $stmt->fetchColumn();
+    $total_paginas = max(1, (int) ceil($total / $por_pag));
+
+    $stmt = $pdo->prepare(
+        "SELECT c.id, c.estado, c.hora_inicio, c.duracion_min, c.aula, c.modalidad,
+                m.nombre AS materia, m.curso,
+                CONCAT(u.nombre,' ',u.apellido) AS profesor,
+                c.fecha,
+                COUNT(DISTINCT i.alumno_id)                                              AS total_alum,
+                SUM(a.estado IN ('presente','tardanza'))                                  AS presentes,
+                COUNT(DISTINCT i.alumno_id)-COALESCE(SUM(a.estado IN ('presente','tardanza')),0) AS ausentes,
+                ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(DISTINCT i.alumno_id),0)*100,1) AS pct
+         FROM clases c
+         JOIN materias m ON m.id = c.materia_id
+         LEFT JOIN usuarios u ON u.id = m.profesor_id
+         LEFT JOIN inscripciones i ON i.materia_id = m.id
+         LEFT JOIN asistencias a ON a.clase_id = c.id AND a.alumno_id = i.alumno_id
+         $where
+         GROUP BY c.id
+         ORDER BY c.fecha DESC, m.nombre
+         LIMIT ? OFFSET ?"
+    );
+
+    $stmt->bindValue(count($params) + 1, $por_pag, PDO::PARAM_INT);
+    $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
+    for ($i = 0; $i < count($params); $i++) {
+        $stmt->bindValue($i + 1, $params[$i]);
+    }
+    $stmt->execute();
+    $clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 $partes    = explode(' ', $_SESSION['nombre']);
 $iniciales = strtoupper(substr($partes[0],0,1) . substr($partes[1]??'',0,1));

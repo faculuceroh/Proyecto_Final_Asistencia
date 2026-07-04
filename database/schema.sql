@@ -106,7 +106,7 @@ CREATE TABLE clases (
   duracion_min SMALLINT UNSIGNED NOT NULL DEFAULT 90,
   aula         VARCHAR(50)    NULL,               -- NULL si es virtual
   modalidad    ENUM('presencial','virtual','hibrida') NOT NULL DEFAULT 'presencial',
-  estado       ENUM('pendiente','en_curso','finalizada') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_curso','finalizada','suspendida') NOT NULL DEFAULT 'pendiente',
   created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE CASCADE,
   INDEX idx_clases_fecha     (fecha),

@@ -65,7 +65,7 @@ CREATE TABLE `clases` (
   `duracion_min` smallint(5) unsigned NOT NULL DEFAULT 90,
   `aula` varchar(50) DEFAULT NULL,
   `modalidad` enum('presencial','virtual','hibrida') NOT NULL DEFAULT 'presencial',
-  `estado` enum('pendiente','en_curso','finalizada') NOT NULL DEFAULT 'pendiente',
+  `estado` enum('pendiente','en_curso','finalizada','suspendida') NOT NULL DEFAULT 'pendiente',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_clases_fecha` (`fecha`),

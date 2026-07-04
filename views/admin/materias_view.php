@@ -430,6 +430,7 @@
 
 // ── Datos de PHP → JS ─────────────────────────────────────────
 let ALL = <?= json_encode(array_values($materias)) ?>;
+let editMateriaId = null;
 const PER_PAGE = 5;
 let filtrado = [...ALL];
 let pagina   = 1;
@@ -511,6 +512,10 @@ function rowHtml(m) {
     <td style="white-space:nowrap">${esc(m.horario || '—')}</td>
     <td>${mod}</td>
     <td style="white-space:nowrap">
+      <button class="btn btn-ghost btn-sm btn-edit-materia" data-edit="${m.id}"
+              title="Editar" style="color:var(--c-primary); margin-right: 4px;">
+        <i class="fa-solid fa-pen"></i>
+      </button>
       <button class="btn btn-ghost btn-sm" data-elim="${m.id}" data-nombre="${esc(m.nombre)}"
               title="Eliminar" style="color:var(--c-danger)">
         <i class="fa-solid fa-trash"></i>
@@ -532,6 +537,7 @@ function render() {
   } else {
     tbody.innerHTML = items.map(m => `<tr>${rowHtml(m)}</tr>`).join('');
     tbody.querySelectorAll('[data-elim]').forEach(btn => btn.addEventListener('click', () => confirmarEliminar(btn)));
+    tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => iniciarEdicion(btn)));
   }
 
   renderPaginacion(inicio, items.length);
@@ -633,7 +639,7 @@ if (pills[0]) {
   pills[0].click();
 }
 
-// ── Crear materia ─────────────────────────────────────────────
+// ── Crear / Editar materia ─────────────────────────────────────
 document.getElementById('materiaForm').addEventListener('submit', function (e) {
   e.preventDefault();
   const fd   = new FormData(this);
@@ -648,50 +654,165 @@ document.getElementById('materiaForm').addEventListener('submit', function (e) {
     return;
   }
 
-  App.api('../api/crear_materia.php', {
+  const endpoint = editMateriaId ? '../api/editar_materia.php' : '../api/crear_materia.php';
+  const payload = {
+    nombre:        fd.get('nombre'),
+    codigo:        fd.get('codigo'),
+    curso:         fd.get('curso'),
+    modalidad:     fd.get('modalidad'),
+    profesor_id:   fd.get('profesor_id')   || 0,
+    profesor_2_id: fd.get('profesor_2_id') || 0,
+    horarios:      dias.map(d => ({ dia: d, hora_inicio: hi, hora_fin: hf })),
+    fecha_inicio:  fi,
+    fecha_fin:     ff
+  };
+
+  if (editMateriaId) {
+    payload.materia_id = editMateriaId;
+  }
+
+  App.api(endpoint, {
     method: 'POST', loader: true,
-    body: JSON.stringify({
-      nombre:        fd.get('nombre'),
-      codigo:        fd.get('codigo'),
-      curso:         fd.get('curso'),
-      modalidad:     fd.get('modalidad'),
-      profesor_id:   fd.get('profesor_id')   || 0,
-      profesor_2_id: fd.get('profesor_2_id') || 0,
-      horarios:      dias.map(d => ({ dia: d, hora_inicio: hi, hora_fin: hf })),
-      fecha_inicio:  fi,
-      fecha_fin:     ff
-    }),
+    body: JSON.stringify(payload),
   })
   .then(function (res) {
     const m = res.materia;
-    const nuevo = {
+    const itemData = {
       id: m.id, nombre: m.nombre, codigo: m.codigo || '',
       curso: m.curso, modalidad: m.modalidad,
       profesor: m.profesor, profesor_2: m.profesor_2 || '',
-      dias: m.dias, horario: m.hora,
+      dias: m.dias, horario: m.horario,
+      profesor_id: m.profesor_id, profesor_2_id: m.profesor_2_id,
+      dias_num: m.dias_num,
+      fecha_inicio: m.fecha_inicio,
+      fecha_fin: m.fecha_fin
     };
-    ALL.unshift(nuevo);
+
+    if (editMateriaId) {
+      const idx = ALL.findIndex(x => x.id === editMateriaId);
+      if (idx !== -1) ALL[idx] = itemData;
+      let msg = 'Materia "' + m.nombre + '" actualizada.';
+      if (res.materia.clases_generadas > 0) {
+        msg += ' Se generaron ' + res.materia.clases_generadas + ' nuevas clases.';
+      }
+      App.toast(msg, 'success');
+      cancelarEdicion();
+    } else {
+      ALL.unshift(itemData);
+      let msg = 'Materia "' + m.nombre + '" creada.';
+      if (res.materia.clases_generadas > 0) {
+        msg += ' Se generaron ' + res.materia.clases_generadas + ' clases.';
+      }
+      App.toast(msg, 'success');
+      cancelarEdicion();
+    }
+
     document.getElementById('searchInput').value = '';
     filtrado = [...ALL];
     pagina = 1;
     render();
-    
-    let msg = 'Materia "' + m.nombre + '" creada.';
-    if (res.materia.clases_generadas > 0) {
-      msg += ' Se generaron ' + res.materia.clases_generadas + ' clases.';
-    }
-    App.toast(msg, 'success');
-    
-    App.qs('#materiaForm').reset();
-    App.qsa('.day-opt input').forEach(c => c.checked = false);
-    
-    // Auto-seleccionar primer horario de vuelta
-    if (pills[0]) {
-      pills[0].click();
-    }
   })
   .catch(err => App.toast(err.message, 'error'));
 });
+
+function iniciarEdicion(btn) {
+  const id = parseInt(btn.dataset.edit);
+  const m = ALL.find(x => x.id === id);
+  if (!m) return;
+
+  editMateriaId = id;
+
+  const panelTitle = document.querySelector('.mat-form-panel h3');
+  if (panelTitle) panelTitle.textContent = 'Editar materia';
+  
+  const submitBtn = document.querySelector('#materiaForm button[type="submit"]');
+  if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar cambios';
+
+  let cancelBtn = document.getElementById('btnCancelarEdicion');
+  if (!cancelBtn) {
+    cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.id = 'btnCancelarEdicion';
+    cancelBtn.className = 'btn btn-ghost mt-2';
+    cancelBtn.style.width = '100%';
+    cancelBtn.textContent = 'Cancelar edición';
+    cancelBtn.onclick = cancelarEdicion;
+    submitBtn.parentNode.appendChild(cancelBtn);
+  }
+
+  // Deshabilitar campos de fecha ya que la materia ya fue creada y las clases ya fueron programadas
+  const form = document.getElementById('materiaForm');
+  form.querySelector('[name="nombre"]').value = m.nombre;
+  form.querySelector('[name="codigo"]').value = m.codigo || '';
+  form.querySelector('[name="curso"]').value = m.curso;
+  form.querySelector('[name="modalidad"]').value = m.modalidad;
+
+  // Autocompletes
+  const p1Aut = form.querySelector('.field-prof1 [data-prof-autocomplete]');
+  p1Aut.querySelector('[data-prof-hidden]').value = m.profesor_id || '';
+  p1Aut.querySelector('[data-prof-input]').value = m.profesor !== '—' ? m.profesor : '';
+
+  const p2Aut = form.querySelector('.field-prof2 [data-prof-autocomplete]');
+  p2Aut.querySelector('[data-prof-hidden]').value = m.profesor_2_id || '';
+  p2Aut.querySelector('[data-prof-input]').value = m.profesor_2 || '';
+
+  // Checkboxes
+  const diasArr = String(m.dias_num || '').split(',').map(Number);
+  form.querySelectorAll('.day-opt input').forEach(cb => {
+    cb.checked = diasArr.includes(parseInt(cb.value));
+  });
+
+  // Hours range
+  if (m.horario && m.horario !== '—') {
+    const [hi, hf] = m.horario.split(' - ');
+    document.getElementById('inputHoraInicio').value = hi.trim();
+    document.getElementById('inputHoraFin').value = hf.trim();
+    
+    let matchedPill = false;
+    document.querySelectorAll('.shift-pill-btn').forEach(pill => {
+      if (pill.getAttribute('data-inicio') === hi.trim() && pill.getAttribute('data-fin') === hf.trim()) {
+        pill.click();
+        matchedPill = true;
+      }
+    });
+    if (!matchedPill) {
+      const btnPers = document.getElementById('btnPersonalizado');
+      if (btnPers) btnPers.click();
+      document.getElementById('inputHoraInicio').value = hi.trim();
+      document.getElementById('inputHoraFin').value = hf.trim();
+    }
+  }
+
+  // Asegurar que la sección de fechas esté visible y populada
+  const fInicio = document.getElementById('inputFechaInicio');
+  if (fInicio) fInicio.value = m.fecha_inicio || '';
+  const fFin = document.getElementById('inputFechaFin');
+  if (fFin) fFin.value = m.fecha_fin || '';
+
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelarEdicion() {
+  editMateriaId = null;
+
+  const panelTitle = document.querySelector('.mat-form-panel h3');
+  if (panelTitle) panelTitle.textContent = 'Nueva materia';
+  
+  const submitBtn = document.querySelector('#materiaForm button[type="submit"]');
+  if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Crear materia';
+
+  const cancelBtn = document.getElementById('btnCancelarEdicion');
+  if (cancelBtn) cancelBtn.remove();
+
+  const form = document.getElementById('materiaForm');
+  form.reset();
+  form.querySelectorAll('.day-opt input').forEach(cb => cb.checked = false);
+  form.querySelector('.field-prof1 [data-prof-hidden]').value = '';
+  form.querySelector('.field-prof2 [data-prof-hidden]').value = '';
+
+  const pills = document.querySelectorAll('.shift-pill-btn');
+  if (pills[0]) pills[0].click();
+}
 
 // ── Eliminar materia ──────────────────────────────────────────
 function confirmarEliminar(btn) {

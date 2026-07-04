@@ -16,6 +16,7 @@ $profesores = $pdo->query(
 // Materias con horario concatenado
 $materias = $pdo->query(
     "SELECT m.id, m.nombre, m.codigo, m.curso, m.modalidad,
+            m.profesor_id, m.profesor_2_id,
             COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor,
             COALESCE(CONCAT(u2.nombre,' ',u2.apellido),'') AS profesor_2,
             (SELECT GROUP_CONCAT(
@@ -24,8 +25,11 @@ $materias = $pdo->query(
                  WHEN 4 THEN 'Jue' WHEN 5 THEN 'Vie' WHEN 6 THEN 'Sáb' ELSE 'Dom'
                END ORDER BY dia_semana SEPARATOR ', ')
              FROM materia_horarios WHERE materia_id = m.id) AS dias,
+            (SELECT GROUP_CONCAT(dia_semana ORDER BY dia_semana) FROM materia_horarios WHERE materia_id = m.id) AS dias_num,
             (SELECT CONCAT(TIME_FORMAT(hora_inicio,'%H:%i'),' - ',TIME_FORMAT(hora_fin,'%H:%i'))
-             FROM materia_horarios WHERE materia_id = m.id LIMIT 1) AS horario
+             FROM materia_horarios WHERE materia_id = m.id LIMIT 1) AS horario,
+            (SELECT MIN(fecha) FROM clases WHERE materia_id = m.id) AS fecha_inicio,
+            (SELECT MAX(fecha) FROM clases WHERE materia_id = m.id) AS fecha_fin
       FROM materias m
       LEFT JOIN usuarios u  ON u.id  = m.profesor_id
       LEFT JOIN usuarios u2 ON u2.id = m.profesor_2_id
