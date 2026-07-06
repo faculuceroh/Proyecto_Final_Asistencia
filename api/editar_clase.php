@@ -18,7 +18,7 @@ $hora_inicio  = trim($body['hora_inicio'] ?? '');
 $duracion_min = (int) ($body['duracion_min'] ?? 90);
 $aula         = trim($body['aula'] ?? '');
 $modalidad    = in_array($body['modalidad'] ?? '', ['presencial','virtual','hibrida']) ? $body['modalidad'] : 'presencial';
-$estado       = in_array($body['estado'] ?? '', ['pendiente','en_curso','finalizada']) ? $body['estado'] : 'pendiente';
+$estado       = in_array($body['estado'] ?? '', ['pendiente','en_curso','finalizada','suspendida']) ? $body['estado'] : 'pendiente';
 
 if (!$clase_id || !$fecha || !$hora_inicio || !$duracion_min) {
     http_response_code(400);

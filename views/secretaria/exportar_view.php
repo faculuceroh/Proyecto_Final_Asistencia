@@ -141,11 +141,17 @@
         </div>
 
         <?php if ($clase_detalle['estado'] === 'pendiente'): ?>
-          <div class="card" style="padding:24px;text-align:center;color:var(--c-text-faint)">
-            <i class="fa-solid fa-clock" style="font-size:2rem;margin-bottom:10px"></i>
-            <p>Esta clase aún no fue tomada. La asistencia estará disponible una vez finalizada.</p>
+          <div class="alert alert-info" style="margin-bottom: 16px; padding: 12px; border-radius: var(--r-md); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #3b82f6; font-size: 0.85rem; display: flex; gap: 8px; align-items: center;">
+            <i class="fa-solid fa-circle-info"></i>
+            Esta clase aún no fue tomada. La asistencia estará disponible una vez finalizada (todos los alumnos figuran como ausentes temporalmente).
           </div>
-        <?php else: ?>
+        <?php elseif ($clase_detalle['estado'] === 'suspendida'): ?>
+          <div class="alert alert-danger" style="margin-bottom: 16px; padding: 12px; border-radius: var(--r-md); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 0.85rem; display: flex; gap: 8px; align-items: center;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            Esta clase se encuentra suspendida (feriado o asueto). No restará asistencia a los alumnos.
+          </div>
+        <?php endif; ?>
+
         <div class="card table-card">
           <div class="table-scroll">
             <table class="data-table">
@@ -208,7 +214,6 @@
           </div>
           <?php endif; ?>
         </div>
-        <?php endif; ?>
 
       <?php elseif ($materia_detalle): ?>
       <!-- ── VISTA LISTA DE CLASES DE LA MATERIA ────────────── -->
@@ -600,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       </div>`;
-    document.body.appendChild(overlay);
+document.body.appendChild(overlay);
 
     overlay.querySelector('#cerrarModal').onclick =
     overlay.querySelector('#cancelarElim').onclick = () => overlay.remove();
@@ -620,46 +625,69 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Registrar Feriado / Suspensión Masiva ─────────────────────
+  let fechasSeleccionadasCalendario = [];
+
   const btnSuspender = document.getElementById('btnSuspenderMasivo');
   if (btnSuspender) {
-    btnSuspender.addEventListener('click', abrirModalSuspensionMasiva);
+    btnSuspender.addEventListener('click', () => abrirModalSuspensionMasiva([]));
   }
 
-  function abrirModalSuspensionMasiva() {
-    let fechasSeleccionadas = [];
+  const btnSuspCal = document.getElementById('btnSuspenderSeleccionadasCal');
+  if (btnSuspCal) {
+    btnSuspCal.addEventListener('click', function() {
+      abrirModalSuspensionMasiva(fechasSeleccionadasCalendario);
+    });
+  }
+
+  function updateCalendarSelectionButton() {
+    const btn = document.getElementById('btnSuspenderSeleccionadasCal');
+    const countSpan = document.getElementById('calSelectedCount');
+    if (!btn || !countSpan) return;
+
+    const count = fechasSeleccionadasCalendario.length;
+    countSpan.textContent = count;
+    if (count > 0) {
+      btn.style.display = 'inline-flex';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  function abrirModalSuspensionMasiva(fechasIniciales = []) {
+    let fechasSeleccionadas = [...fechasIniciales];
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-head">
-          <h3>Registrar Feriados / Asuetos</h3>
-          <button class="modal-close" id="cerrarModal">&times;</button>
+      <div class="modal" style="background: var(--sidebar-bg, #062B63) !important; color: #fff !important; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);">
+        <div class="modal-head" style="border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding-bottom: 12px;">
+          <h3 style="color: #fff !important; font-weight: 700; font-family: Montserrat, sans-serif;">Registrar Feriados / Asuetos</h3>
+          <button class="modal-close" id="cerrarModal" style="color: rgba(255,255,255,0.7) !important;">&times;</button>
         </div>
-        <form id="suspenderMasivoForm" style="margin-top: 16px;">
-          <p class="text-muted" style="font-size:0.85rem; margin-bottom: 16px;">
+        <form id="suspenderMasivoForm" style="padding: 20px 22px 22px 22px; margin: 0;">
+          <p style="font-size:0.85rem; margin-bottom: 16px; color: #e2e8f0 !important; font-weight: 500;">
             Agregá todas las fechas que desees suspender. Todas las clases de todas las materias programadas en estas fechas quedarán suspendidas y no restarán asistencia a los alumnos.
           </p>
           
           <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 16px;">
             <div class="field" style="flex: 1; margin: 0;">
-              <label>Seleccionar fecha</label>
-              <input class="input" type="date" id="suspFechaInput" />
+              <label style="color: #e2e8f0 !important; font-weight: 600;">Seleccionar fecha</label>
+              <input class="input" type="date" id="suspFechaInput" style="background: rgba(255,255,255,0.08) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; color-scheme: dark;" />
             </div>
-            <button type="button" class="btn btn-ghost" id="btnAgregarFecha" style="padding: 10px 14px; height: 38px;">
+            <button type="button" class="btn btn-ghost" id="btnAgregarFecha" style="padding: 10px 14px; height: 38px; border: 1px solid rgba(255,255,255,0.25) !important; color: #fff !important;">
               <i class="fa-solid fa-plus"></i> Agregar
             </button>
           </div>
           
           <div>
-            <label style="font-weight:600; font-size:0.85rem; color:var(--c-text-soft);">Resumen de días a suspender:</label>
-            <div id="listaFechasSuspendidas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; min-height: 50px; padding: 12px; border: 1px dashed var(--c-border); border-radius: var(--r-md); background: var(--c-muted-soft);">
-              <span class="text-muted" style="font-size:0.8rem; margin: auto;" id="msgSinFechas">No hay fechas seleccionadas.</span>
+            <label style="font-weight:600; font-size:0.85rem; color: #e2e8f0 !important;">Resumen de días a suspender:</label>
+            <div id="listaFechasSuspendidas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; min-height: 50px; padding: 12px; border: 1px dashed rgba(255, 255, 255, 0.25); border-radius: var(--r-md); background: rgba(0, 0, 0, 0.15);">
+              <span style="font-size:0.8rem; margin: auto; color: rgba(255,255,255,0.4);" id="msgSinFechas">No hay fechas seleccionadas.</span>
             </div>
           </div>
           
           <div class="modal-foot" style="margin-top: 24px; display: flex; gap: 8px;">
-            <button type="button" class="btn btn-ghost" id="cancelarSusp" style="flex:1">Cancelar</button>
+            <button type="button" class="btn btn-ghost" id="cancelarSusp" style="flex:1; border: 1px solid rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.85) !important;">Cancelar</button>
             <button type="submit" class="btn btn-danger" style="flex:1">
               <i class="fa-solid fa-calendar-minus"></i> Confirmar suspensión
             </button>
@@ -672,6 +700,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAgregar = overlay.querySelector('#btnAgregarFecha');
     const container = overlay.querySelector('#listaFechasSuspendidas');
     const msgSinFechas = overlay.querySelector('#msgSinFechas');
+
+    renderFechas();
 
     btnAgregar.addEventListener('click', function() {
       const val = inputFecha.value;
@@ -704,9 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const [y, m, d] = f.split('-');
         const formatted = `${d}/${m}/${y}`;
         return `
-          <span class="badge badge-muted" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 0.85rem;" data-val="${f}">
+          <span class="badge tag-animate" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 0.85rem; background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px;" data-val="${f}">
             ${formatted}
-            <i class="fa-solid fa-xmark text-danger btn-remove-fecha" style="cursor:pointer;" data-val="${f}"></i>
+            <i class="fa-solid fa-xmark btn-remove-fecha" style="cursor:pointer; color: #ff8a8a;" data-val="${f}"></i>
           </span>
         `;
       }).join('');
@@ -714,8 +744,12 @@ document.addEventListener('DOMContentLoaded', () => {
       container.querySelectorAll('.btn-remove-fecha').forEach(x => {
         x.addEventListener('click', function() {
           const toRemove = this.getAttribute('data-val');
-          fechasSeleccionadas = fechasSeleccionadas.filter(item => item !== toRemove);
-          renderFechas();
+          const badge = this.closest('.badge');
+          badge.classList.add('tag-animate-out');
+          badge.addEventListener('animationend', function() {
+            fechasSeleccionadas = fechasSeleccionadas.filter(item => item !== toRemove);
+            renderFechas();
+          });
         });
       });
     }
@@ -736,11 +770,154 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .then(res => {
         App.toast('Clases suspendidas con éxito. Afectadas: ' + res.afectadas + ' clases.', 'success');
+        fechasSeleccionadasCalendario = [];
         overlay.remove();
         setTimeout(() => location.reload(), 1500);
       })
       .catch(err => App.toast(err.message, 'error'));
     };
+  }
+
+  // ── Vista Calendario e Inicialización ──
+  const btnTable = document.getElementById('btnViewTable');
+  const btnCalendar = document.getElementById('btnViewCalendar');
+  const tableCard = document.querySelector('.card.table-card:not(#calendarCard)');
+  const calendarCard = document.getElementById('calendarCard');
+  
+  if (btnTable && btnCalendar) {
+    btnTable.addEventListener('click', function() {
+      btnCalendar.classList.remove('active');
+      this.classList.add('active');
+      if (tableCard) tableCard.style.display = 'block';
+      if (calendarCard) calendarCard.style.display = 'none';
+      localStorage.setItem('secretaria_view_mode', 'table');
+      fechasSeleccionadasCalendario = [];
+      updateCalendarSelectionButton();
+    });
+    
+    btnCalendar.addEventListener('click', function() {
+      btnTable.classList.remove('active');
+      this.classList.add('active');
+      if (tableCard) tableCard.style.display = 'none';
+      if (calendarCard) calendarCard.style.display = 'block';
+      localStorage.setItem('secretaria_view_mode', 'calendar');
+      fechasSeleccionadasCalendario = [];
+      updateCalendarSelectionButton();
+      renderCalendar();
+    });
+    
+    const viewMode = localStorage.getItem('secretaria_view_mode') || 'table';
+    if (viewMode === 'calendar') {
+      btnCalendar.click();
+    }
+  }
+
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  
+  const MONTH_NAMES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  const calPrevBtn = document.getElementById('calPrevMonth');
+  const calNextBtn = document.getElementById('calNextMonth');
+  if (calPrevBtn && calNextBtn) {
+    calPrevBtn.onclick = function() {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      fechasSeleccionadasCalendario = [];
+      updateCalendarSelectionButton();
+      renderCalendar();
+    };
+
+    calNextBtn.onclick = function() {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      fechasSeleccionadasCalendario = [];
+      updateCalendarSelectionButton();
+      renderCalendar();
+    };
+  }
+
+  function renderCalendar() {
+    const title = document.getElementById('calMonthTitle');
+    const grid = document.getElementById('calendarGrid');
+    if (!title || !grid) return;
+
+    title.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
+    grid.innerHTML = '';
+
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+    const prevLastDay = new Date(currentYear, currentMonth, 0).getDate();
+    const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    for (let i = firstDayIndex; i > 0; i--) {
+      const d = prevLastDay - i + 1;
+      const cell = document.createElement('div');
+      cell.className = 'cal-day-cell other-month';
+      cell.innerHTML = `<span class="cal-day-num">${d}</span>`;
+      grid.appendChild(cell);
+    }
+
+    const today = new Date();
+    for (let d = 1; d <= lastDay; d++) {
+      const cell = document.createElement('div');
+      const isToday = today.getDate() === d && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isSelected = fechasSeleccionadasCalendario.includes(dateStr);
+
+      cell.className = `cal-day-cell${isToday ? ' today' : ''}${isSelected ? ' selected-suspension' : ''}`;
+      cell.innerHTML = `<span class="cal-day-num">${d}</span>`;
+
+      cell.addEventListener('click', function() {
+        if (fechasSeleccionadasCalendario.includes(dateStr)) {
+          fechasSeleccionadasCalendario = fechasSeleccionadasCalendario.filter(f => f !== dateStr);
+        } else {
+          fechasSeleccionadasCalendario.push(dateStr);
+        }
+        renderCalendar();
+        updateCalendarSelectionButton();
+      });
+
+      const dayClasses = TODAS_LAS_CLASES.filter(c => c.fecha === dateStr);
+      dayClasses.forEach(c => {
+        const ev = document.createElement('div');
+        const hora = c.hora_inicio.substring(0, 5);
+        let badgeCls = 'ev-muted';
+        let badgeLbl = 'Pendiente';
+        if (c.estado === 'finalizada') { badgeCls = 'ev-success'; badgeLbl = 'Finalizada'; }
+        else if (c.estado === 'en_curso') { badgeCls = 'ev-warning'; badgeLbl = 'En curso'; }
+        else if (c.estado === 'suspendida') { badgeCls = 'ev-danger'; badgeLbl = 'Suspendida'; }
+
+        ev.className = `cal-event ${badgeCls}`;
+        ev.title = `${c.materia}\nProfesor: ${c.profesor}\nHora: ${hora}\nEstado: ${badgeLbl}\nAula: ${c.aula || 'No asignada'}`;
+        ev.innerHTML = `<strong>${hora}</strong> <span>${c.modalidad === 'virtual' ? '💻' : '🚪'} ${c.aula || 'S/A'}</span>`;
+        
+        ev.addEventListener('click', function(e) {
+          e.stopPropagation();
+          abrirModalEditarClase(c);
+        });
+        cell.appendChild(ev);
+      });
+
+      grid.appendChild(cell);
+    }
+
+    const totalSlots = firstDayIndex + lastDay;
+    const nextSlots = (totalSlots % 7 === 0) ? 0 : (7 - (totalSlots % 7));
+    for (let i = 1; i <= nextSlots; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day-cell other-month';
+      cell.innerHTML = `<span class="cal-day-num">${i}</span>`;
+      grid.appendChild(cell);
+    }
   }
 });
 </script>

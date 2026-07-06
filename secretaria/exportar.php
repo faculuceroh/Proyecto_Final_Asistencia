@@ -103,7 +103,7 @@ if ($f_materia) {
 // ── Stats ─────────────────────────────────────────────────────
 if ($f_materia) {
     // Estadísticas de la materia seleccionada
-    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE materia_id = $f_materia AND fecha <= CURDATE()")->fetchColumn();
+    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE materia_id = $f_materia AND estado != 'suspendida'")->fetchColumn();
     $total_pres    = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.materia_id = $f_materia AND a.estado IN ('presente','tardanza') AND c.fecha <= CURDATE()")->fetchColumn();
     $total_aus     = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.materia_id = $f_materia AND a.estado = 'ausente' AND c.fecha <= CURDATE()")->fetchColumn();
     $prom_asist    = $pdo->query("
@@ -113,8 +113,8 @@ if ($f_materia) {
         WHERE c.materia_id = $f_materia AND c.fecha <= CURDATE()
     ")->fetchColumn() ?? 0;
 } else {
-    // Estadísticas globales (de todas las clases ocurridas hasta hoy)
-    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE fecha <= CURDATE()")->fetchColumn();
+    // Estadísticas globales
+    $total_clases  = (int) $pdo->query("SELECT COUNT(*) FROM clases WHERE estado != 'suspendida'")->fetchColumn();
     $total_pres    = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.fecha <= CURDATE() AND a.estado IN ('presente','tardanza')")->fetchColumn();
     $total_aus     = (int) $pdo->query("SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id WHERE c.fecha <= CURDATE() AND a.estado = 'ausente'")->fetchColumn();
     $prom_asist    = $pdo->query("
@@ -132,10 +132,10 @@ if (!$clase_id && !$f_materia) {
         SELECT m.id, m.nombre, m.codigo, m.curso, m.modalidad,
                COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor,
                COALESCE(CONCAT(u2.nombre,' ',u2.apellido),'') AS profesor_2,
-               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE()) AS total_clases,
-               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'finalizada') AS clases_finalizadas,
-               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'pendiente') AS clases_pendientes,
-               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND fecha <= CURDATE() AND estado = 'en_curso') AS clases_en_curso
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND estado != 'suspendida') AS total_clases,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND estado = 'finalizada') AS clases_finalizadas,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND estado = 'pendiente') AS clases_pendientes,
+               (SELECT COUNT(*) FROM clases WHERE materia_id = m.id AND estado = 'en_curso') AS clases_en_curso
         FROM materias m
         LEFT JOIN usuarios u  ON u.id  = m.profesor_id
         LEFT JOIN usuarios u2 ON u2.id = m.profesor_2_id
@@ -192,6 +192,21 @@ if ($f_materia) {
     }
     $stmt->execute();
     $clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_all = $pdo->prepare("
+        SELECT c.id, c.fecha, c.hora_inicio, c.duracion_min, c.aula, c.modalidad, c.estado,
+               m.nombre AS materia, m.curso,
+               COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor,
+               (SELECT COUNT(*) FROM asistencias WHERE clase_id = c.id AND estado IN ('presente','tardanza')) AS presentes,
+               (SELECT COUNT(*) FROM asistencias WHERE clase_id = c.id AND estado = 'ausente') AS ausentes,
+               (SELECT ROUND(SUM(estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1) FROM asistencias WHERE clase_id = c.id) AS pct
+        FROM clases c
+        JOIN materias m ON m.id = c.materia_id
+        LEFT JOIN usuarios u ON u.id = m.profesor_id
+        WHERE c.materia_id = ?
+    ");
+    $stmt_all->execute([$f_materia]);
+    $todas_las_clases_raw = $stmt_all->fetchAll(PDO::FETCH_ASSOC);
 }
 
 $partes    = explode(' ', $_SESSION['nombre']);
