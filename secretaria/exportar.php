@@ -153,10 +153,21 @@ if ($f_materia) {
     $where  = "WHERE 1=1";
     $params = [];
 
+    $f_rango = in_array($_GET['rango'] ?? '', ['hoy', 'semana', 'pendientes']) ? $_GET['rango'] : '';
+
     if ($f_profesor) { $where .= ' AND m.profesor_id = ?';  $params[] = $f_profesor; }
     $where .= ' AND c.materia_id  = ?';  $params[] = $f_materia;
-    if ($f_fecha)    { $where .= ' AND c.fecha        = ?';  $params[] = $f_fecha; }
-    if ($f_estado)   { $where .= ' AND c.estado       = ?';  $params[] = $f_estado; }
+
+    if ($f_rango === 'hoy') {
+        $where .= ' AND c.fecha = CURDATE()';
+    } elseif ($f_rango === 'semana') {
+        $where .= ' AND YEARWEEK(c.fecha, 1) = YEARWEEK(CURDATE(), 1)';
+    } elseif ($f_rango === 'pendientes') {
+        $where .= " AND c.estado = 'pendiente'";
+    } else {
+        if ($f_fecha)    { $where .= ' AND c.fecha        = ?';  $params[] = $f_fecha; }
+        if ($f_estado)   { $where .= ' AND c.estado       = ?';  $params[] = $f_estado; }
+    }
 
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM clases c JOIN materias m ON m.id=c.materia_id $where"
@@ -181,7 +192,7 @@ if ($f_materia) {
          LEFT JOIN asistencias a ON a.clase_id = c.id AND a.alumno_id = i.alumno_id
          $where
          GROUP BY c.id
-         ORDER BY c.fecha DESC, m.nombre
+         ORDER BY ABS(DATEDIFF(c.fecha, CURDATE())) ASC, c.hora_inicio ASC
          LIMIT ? OFFSET ?"
     );
 
@@ -214,6 +225,19 @@ $iniciales = strtoupper(substr($partes[0],0,1) . substr($partes[1]??'',0,1));
 
 function url_pag(int $p): string {
     $params = $_GET; $params['pagina'] = $p;
+    return '?' . http_build_query($params);
+}
+
+function url_rango(string $r): string {
+    $params = $_GET;
+    if ($r === '') {
+        unset($params['rango']);
+    } else {
+        $params['rango'] = $r;
+    }
+    unset($params['fecha']);
+    unset($params['estado']);
+    $params['pagina'] = 1;
     return '?' . http_build_query($params);
 }
 

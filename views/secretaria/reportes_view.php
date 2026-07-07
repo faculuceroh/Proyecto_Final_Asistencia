@@ -44,6 +44,27 @@
     </header>
     <main class="app-content">
 
+      <!-- Filtro por Materia -->
+      <form method="GET" action="reportes.php" id="filtroReporteForm" style="margin-bottom: 24px;">
+        <div class="toolbar" style="padding: 0; background: transparent; box-shadow: none; display: flex; justify-content: flex-start;">
+          <div class="filters" style="display: flex; gap: 12px; align-items: center; flex: 1;">
+            <select class="select" name="materia_id" onchange="this.form.submit()" style="min-width: 280px; padding: 10px 14px; height: 42px; border-radius: var(--r-md); border: 1px solid var(--c-border); background: var(--c-muted-soft); font-family: inherit; font-size: 0.9rem; font-weight: 500; color: var(--c-text);">
+              <option value="">Todas las materias (Global)</option>
+              <?php foreach ($materias_lista as $m): ?>
+                <option value="<?= $m['id'] ?>" <?= $f_materia == $m['id'] ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($m['nombre']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <?php if ($f_materia): ?>
+              <a href="reportes.php" class="btn btn-ghost btn-sm" style="height: 42px; display: inline-flex; align-items: center; font-size: 0.85rem;">
+                <i class="fa-solid fa-xmark"></i> Limpiar filtro
+              </a>
+            <?php endif; ?>
+          </div>
+        </div>
+      </form>
+
       <!-- Stats -->
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-icon i-green"><i class="fa-solid fa-percent"></i></div><div><div class="stat-value"><?= $prom_asist ?>%</div><div class="stat-label">Asistencia promedio</div></div></div>
@@ -84,7 +105,7 @@
             <h3 style="font-size:1.05rem">Alumnos en riesgo</h3>
             <div class="spacer"></div>
             <button class="btn btn-success btn-sm"
-                    data-export-url="../api/exportar_riesgo.php">
+                    data-export-url="../api/exportar_riesgo.php<?= $f_materia ? '?materia_id='.$f_materia : '' ?>">
               <i class="fa-solid fa-file-excel"></i> Exportar
             </button>
           </div>

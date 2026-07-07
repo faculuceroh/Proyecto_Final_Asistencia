@@ -4,12 +4,20 @@ require_once __DIR__ . '/../includes/db.php';
 require_auth(['secretaria', 'admin']);
 
 $pdo  = getPDO();
-$rows = $pdo->query(
-    "SELECT apellido, nombre, legajo, curso, materia,
-            clases_presentes, porcentaje
-     FROM v_alumnos_en_riesgo
-     ORDER BY porcentaje ASC, apellido ASC"
-)->fetchAll(PDO::FETCH_ASSOC);
+$f_materia = (int) ($_GET['materia_id'] ?? $_GET['materia'] ?? 0) ?: null;
+
+$query = "SELECT apellido, nombre, legajo, curso, materia, clases_presentes, porcentaje 
+          FROM v_alumnos_en_riesgo";
+$params = [];
+if ($f_materia) {
+    $query .= " WHERE materia_id = ?";
+    $params[] = $f_materia;
+}
+$query .= " ORDER BY porcentaje ASC, apellido ASC";
+
+$stmt = $pdo->prepare($query);
+$stmt->execute($params);
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $fecha = date('Y-m-d');
 header('Content-Type: text/csv; charset=utf-8');

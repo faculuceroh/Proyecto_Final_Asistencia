@@ -34,6 +34,22 @@
   .btn-volver:active {
     transform: translateY(1px);
   }
+
+  /* Animaciones Chips */
+  @keyframes tag-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .tag-animate {
+    animation: tag-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes tag-out {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.9); }
+  }
+  .tag-animate-out {
+    animation: tag-out 0.15s ease forwards;
+  }
   </style>
 </head>
 <body>
@@ -230,18 +246,20 @@
         <div class="stat-card"><div class="stat-icon i-blue"><i class="fa-solid fa-percent"></i></div><div><div class="stat-value"><?= $prom_asist ?>%</div><div class="stat-label">Asistencia promedio</div></div></div>
       </div>
 
+      <h4 style="margin: 20px 0 16px 0; color: var(--c-text); font-size: 1.1rem; font-weight: 700;">Programación de Clases</h4>
+
+      <!-- Atajos de Filtros Rápidos -->
+      <div class="quick-filters" style="margin-bottom: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="<?= url_rango('') ?>" class="btn btn-sm <?= empty($f_rango) ? 'btn-primary' : 'btn-ghost' ?>" style="border-radius: 20px; font-size: 0.8rem; padding: 4px 12px; font-weight: 600;">Todos</a>
+        <a href="<?= url_rango('hoy') ?>" class="btn btn-sm <?= $f_rango === 'hoy' ? 'btn-primary' : 'btn-ghost' ?>" style="border-radius: 20px; font-size: 0.8rem; padding: 4px 12px; font-weight: 600;">Hoy</a>
+        <a href="<?= url_rango('semana') ?>" class="btn btn-sm <?= $f_rango === 'semana' ? 'btn-primary' : 'btn-ghost' ?>" style="border-radius: 20px; font-size: 0.8rem; padding: 4px 12px; font-weight: 600;">Esta semana</a>
+        <a href="<?= url_rango('pendientes') ?>" class="btn btn-sm <?= $f_rango === 'pendientes' ? 'btn-primary' : 'btn-ghost' ?>" style="border-radius: 20px; font-size: 0.8rem; padding: 4px 12px; font-weight: 600;">Pendientes</a>
+      </div>
+
       <form method="GET" action="exportar.php" id="filtrosForm">
         <input type="hidden" name="materia_id" value="<?= $materia_detalle['id'] ?>" />
         <div class="toolbar">
           <div class="filters">
-            <select class="select" name="profesor">
-              <option value="">Todos los profesores</option>
-              <?php foreach ($profesores as $p): ?>
-                <option value="<?= $p['id'] ?>" <?= $f_profesor == $p['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($p['nombre']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
             <select class="select" name="estado">
               <option value="">Todos los estados</option>
               <option value="pendiente"  <?= $f_estado==='pendiente'  ? 'selected':'' ?>>Pendiente</option>
@@ -250,6 +268,7 @@
             </select>
             <input class="input" type="date" name="fecha" value="<?= htmlspecialchars($f_fecha) ?>" />
             <button type="submit" class="btn btn-ghost btn-sm"><i class="fa-solid fa-filter"></i> Filtrar</button>
+            <a href="exportar.php?materia_id=<?= $materia_detalle['id'] ?>" class="btn btn-ghost btn-sm" style="color: var(--c-text-soft);" title="Restablecer todos los filtros"><i class="fa-solid fa-eraser"></i> Limpiar</a>
           </div>
         </div>
       </form>
@@ -358,6 +377,7 @@
         </div>
       </div>
 
+      <!-- Vista Calendario -->
       <?php else: ?>
       <!-- ── VISTA LISTA DE MATERIAS (POR DEFECTO) ──────────── -->
       <div class="stat-grid">
@@ -449,7 +469,8 @@
 <script src="../assets/js/utils.js"></script>
 <script src="../assets/js/export.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+  const TODAS_LAS_CLASES = <?= json_encode($todas_las_clases_raw ?? []) ?>;
+  document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchMateriaInput');
   if (searchInput) {
     searchInput.addEventListener('input', function() {
