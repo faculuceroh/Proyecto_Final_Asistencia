@@ -34,7 +34,7 @@ class Materia extends BaseModel {
         $stmt = self::db()->prepare(
             "SELECT ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1)
              FROM asistencias a
-             JOIN clases c ON c.id = a.clase_id
+             JOIN clases c ON c.id = a.clase_id AND c.estado = 'finalizada'
              JOIN inscripciones i ON i.materia_id = c.materia_id AND i.alumno_id = a.alumno_id
              WHERE a.alumno_id = ?"
         );
@@ -81,20 +81,6 @@ class Materia extends BaseModel {
     }
 
     /**
-     * Obtiene las materias asignadas a un profesor.
-     */
-    public static function getByProfesor($profesor_id) {
-        $stmt = self::db()->prepare(
-            "SELECT id, nombre, curso, modalidad, activo 
-             FROM materias 
-             WHERE profesor_id = ? AND activo = 1 
-             ORDER BY nombre"
-        );
-        $stmt->execute([$profesor_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
      * Obtiene todas las materias.
      */
     public static function getAll() {
@@ -103,20 +89,6 @@ class Materia extends BaseModel {
                     COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor
              FROM materias m
              LEFT JOIN usuarios u ON u.id = m.profesor_id
-             ORDER BY m.nombre"
-        )->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Obtiene todas las materias activas.
-     */
-    public static function getAllActivas() {
-        return self::db()->query(
-            "SELECT m.id, m.nombre, m.curso, m.modalidad,
-                    COALESCE(CONCAT(u.nombre,' ',u.apellido),'—') AS profesor
-             FROM materias m
-             LEFT JOIN usuarios u ON u.id = m.profesor_id
-             WHERE m.activo = 1
              ORDER BY m.nombre"
         )->fetchAll(PDO::FETCH_ASSOC);
     }

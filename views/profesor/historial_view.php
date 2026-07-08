@@ -114,9 +114,13 @@
               <tr>
                 <td>
                   <div class="cell-name">
-                    <span class="mini-avatar">
-                      <?= strtoupper(substr($a['apellido'],0,1).substr($a['nombre'],0,1)) ?>
-                    </span>
+                    <?php if (!empty($a['foto'])): ?>
+                      <img class="mini-avatar" src="../assets/uploads/perfiles/<?= htmlspecialchars($a['foto']) ?>" alt="" />
+                    <?php else: ?>
+                      <span class="mini-avatar">
+                        <?= strtoupper(substr($a['apellido'],0,1).substr($a['nombre'],0,1)) ?>
+                      </span>
+                    <?php endif; ?>
                     <?= htmlspecialchars($a['apellido'].', '.$a['nombre']) ?>
                     <?php if ($a['no_inscripto']): ?>
                       <span class="badge badge-warning" style="font-size:0.7rem;margin-left:4px"
@@ -205,7 +209,8 @@
                     </a>
                     <?php if ($fin): ?>
                     <button class="btn btn-success btn-sm"
-                            data-export-url="../api/exportar.php?clase_id=<?= $c['id'] ?>">
+                            data-export-url="../api/exportar.php?clase_id=<?= $c['id'] ?>"
+                            title="Exportar">
                       <i class="fa-solid fa-file-excel"></i>
                     </button>
                     <?php endif; ?>

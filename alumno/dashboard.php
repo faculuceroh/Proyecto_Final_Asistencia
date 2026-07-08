@@ -36,7 +36,7 @@ $recientes = Asistencia::getRecientes($alu_id, 5);
 
 // ── Helpers ───────────────────────────────────────────────────
 $estado_class = ['en_curso' => 'state-encurso', 'pendiente' => 'state-pendiente', 'finalizada' => 'state-finalizada'];
-$badge_est    = ['presente' => ['badge-success','Presente'], 'tardanza' => ['badge-warning','Tardanza'], 'ausente' => ['badge-danger','Ausente']];
+$badge_est    = ['presente' => ['badge-success','Presente'], 'tardanza' => ['badge-warning','Tarde'], 'ausente' => ['badge-danger','Ausente']];
 $partes       = explode(' ', $_SESSION['nombre']);
 $iniciales    = strtoupper(substr($partes[0],0,1).substr($partes[1]??'',0,1));
 $nombre_corto = $partes[0];

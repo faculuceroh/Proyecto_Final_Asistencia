@@ -59,6 +59,17 @@ if ($_SESSION['rol'] !== 'admin') {
     }
 }
 
+// ── 2.1 No permitir importar sobre una clase suspendida ──────────────────────
+$stmt = getPDO()->prepare('SELECT estado FROM clases WHERE id = ? LIMIT 1');
+$stmt->execute([$clase_id]);
+$estado_clase = $stmt->fetchColumn();
+if ($estado_clase === 'suspendida') {
+    unset($_SESSION['teams_import_preview']);
+    http_response_code(409);
+    echo json_encode(['message' => 'Esta clase está suspendida, no se puede importar asistencia.']);
+    exit;
+}
+
 // ── 3. Preparar los registros a insertar ─────────────────────────────────────
 //   Combinar importados + advertencias; excluir los sin alumno_id (no_matcheados)
 $registros = array_merge(
@@ -123,7 +134,7 @@ try {
 // ── 5. Marcar la clase como finalizada ───────────────────────────────────────
 //   Una clase virtual con asistencia importada se considera finalizada.
 //   Esto permite que aparezca en el historial y en los contadores de stats.
-$pdo->prepare("UPDATE clases SET estado = 'finalizada' WHERE id = ? AND estado != 'finalizada'")
+$pdo->prepare("UPDATE clases SET estado = 'finalizada' WHERE id = ? AND estado NOT IN ('finalizada', 'suspendida')")
     ->execute([$clase_id]);
 
 // ── 6. Limpiar sesión ─────────────────────────────────────────────────────────

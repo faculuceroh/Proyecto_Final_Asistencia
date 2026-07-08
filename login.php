@@ -23,9 +23,10 @@ if ($legajo === '' || $password === '') {
 }
 
 // Busca el usuario en la base de datos
+$pdo = getPDO();
 try {
-    $stmt = getPDO()->prepare(
-        'SELECT id, nombre, apellido, password, rol, activo, foto
+    $stmt = $pdo->prepare(
+        'SELECT id, nombre, apellido, password, rol, activo, foto, intentos_fallidos, bloqueado_hasta
          FROM usuarios WHERE legajo = ? LIMIT 1'
     );
     $stmt->execute([$legajo]);
@@ -36,12 +37,35 @@ try {
     exit;
 }
 
+const MAX_INTENTOS      = 5;
+const BLOQUEO_MINUTOS   = 15;
+
+// Cuenta bloqueada por demasiados intentos fallidos recientes
+if ($user && $user['bloqueado_hasta'] && strtotime($user['bloqueado_hasta']) > time()) {
+    $restantes = (int) ceil((strtotime($user['bloqueado_hasta']) - time()) / 60);
+    http_response_code(429);
+    echo json_encode(['message' => "Demasiados intentos fallidos. Probá de nuevo en $restantes minuto(s)."]);
+    exit;
+}
+
 // Valida credenciales (password_verify compara contra el hash bcrypt)
 if (!$user || !password_verify($password, $user['password'])) {
+    if ($user) {
+        $intentos = $user['intentos_fallidos'] + 1;
+        $bloqueo  = $intentos >= MAX_INTENTOS
+            ? date('Y-m-d H:i:s', time() + BLOQUEO_MINUTOS * 60)
+            : null;
+        $pdo->prepare('UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?')
+            ->execute([$bloqueo ? 0 : $intentos, $bloqueo, $user['id']]);
+    }
     http_response_code(401);
     echo json_encode(['message' => 'Legajo o contraseña incorrectos']);
     exit;
 }
+
+// Login correcto: resetea el contador de intentos fallidos
+$pdo->prepare('UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?')
+    ->execute([$user['id']]);
 
 if (!(bool) $user['activo']) {
     http_response_code(403);
@@ -56,6 +80,9 @@ $destinos = [
     'secretaria' => 'secretaria/exportar.php',
     'admin'      => 'admin/dashboard.php',
 ];
+
+// Genera un ID de sesión nuevo tras autenticar (evita session fixation)
+session_regenerate_id(true);
 
 // Guarda los datos del usuario en la sesión PHP
 $_SESSION['usuario_id'] = (int) $user['id'];

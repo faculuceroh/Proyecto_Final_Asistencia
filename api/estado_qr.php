@@ -6,11 +6,24 @@ require_auth(['profesor', 'admin']);
 header('Content-Type: application/json; charset=utf-8');
 
 $clase_id = (int)($_GET['clase_id'] ?? 0);
+$prof_id  = $_SESSION['usuario_id'];
 if (!$clase_id) {
     http_response_code(400); echo json_encode(['message' => 'clase_id requerido']); exit;
 }
 
 $pdo = getPDO();
+
+// Verificar que la clase pertenece a este profesor
+$stmt = $pdo->prepare(
+    'SELECT c.id FROM clases c
+     JOIN materias m ON m.id = c.materia_id
+     WHERE c.id = ? AND (m.profesor_id = ? OR m.profesor_2_id = ?)
+     LIMIT 1'
+);
+$stmt->execute([$clase_id, $prof_id, $prof_id]);
+if (!$stmt->fetch()) {
+    http_response_code(403); echo json_encode(['message' => 'Clase no encontrada o no te pertenece']); exit;
+}
 
 // Sesión activa para esta clase
 $stmt = $pdo->prepare(

@@ -144,7 +144,13 @@ try {
     // Programar/reprogramar clases en el período del cuatrimestre
     $clases_generadas = 0;
     if ($fecha_inicio && $fecha_fin && !empty($horarios)) {
-        // 1. Obtener clases existentes
+        // 1. Días de la semana del nuevo horario
+        $por_dia = [];
+        foreach ($horarios as $h) {
+            $por_dia[(int)$h['dia']][] = $h;
+        }
+
+        // 2. Obtener clases existentes
         $stmt_c = $pdo->prepare("SELECT id, fecha, DATE_FORMAT(hora_inicio, '%H:%i') as hora_inicio, estado FROM clases WHERE materia_id = ?");
         $stmt_c->execute([$materia_id]);
         $clases_existentes = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
@@ -153,25 +159,27 @@ try {
         $ids_pendientes_fuera = [];
         foreach ($clases_existentes as $ce) {
             $existentes_map[$ce['fecha']][$ce['hora_inicio']] = $ce;
-            // Si la clase está pendiente y cae fuera de las nuevas fechas, se elimina
-            if ($ce['estado'] === 'pendiente' && ($ce['fecha'] < $fecha_inicio || $ce['fecha'] > $fecha_fin)) {
+            if ($ce['estado'] !== 'pendiente') continue;
+
+            $fuera_de_rango = $ce['fecha'] < $fecha_inicio || $ce['fecha'] > $fecha_fin;
+            $dow_clase      = (int) (new DateTime($ce['fecha']))->format('N');
+            $dia_removido   = !isset($por_dia[$dow_clase]);
+
+            // Se elimina si cae fuera de las nuevas fechas, o si su día de la
+            // semana ya no forma parte del nuevo horario.
+            if ($fuera_de_rango || $dia_removido) {
                 $ids_pendientes_fuera[] = $ce['id'];
             }
         }
 
-        // Borrar clases pendientes fuera del nuevo rango
+        // Borrar clases pendientes fuera del nuevo rango o de días removidos
         if (!empty($ids_pendientes_fuera)) {
             $placeholders = implode(',', array_fill(0, count($ids_pendientes_fuera), '?'));
             $stmt_del_cls = $pdo->prepare("DELETE FROM clases WHERE id IN ($placeholders)");
             $stmt_del_cls->execute($ids_pendientes_fuera);
         }
 
-        // 2. Generar nuevas clases
-        $por_dia = [];
-        foreach ($horarios as $h) {
-            $por_dia[(int)$h['dia']][] = $h;
-        }
-
+        // 3. Generar nuevas clases
         $insert_clase = $pdo->prepare(
             "INSERT IGNORE INTO clases (materia_id, fecha, hora_inicio, duracion_min, modalidad, estado)
              VALUES (?, ?, ?, ?, ?, 'pendiente')"

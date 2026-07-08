@@ -180,6 +180,25 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="modalBorrar">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Borrar usuario</h3>
+      <button class="modal-close" id="closeModalBorrar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>¿Seguro que querés borrar a <strong id="borrarUsuarioNombre"></strong>? Esta acción no se puede deshacer.</p>
+      <p class="text-muted" style="font-size:0.88rem;margin-top:8px">
+        Se van a borrar también sus inscripciones y asistencias registradas.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="cancelBorrar">Cancelar</button>
+      <button class="btn btn-danger" id="confirmBorrar">Borrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="../assets/js/utils.js"></script>
 <script>
   const labels = { alumno:'Agregar alumno', profesor:'Agregar profesor' };
@@ -231,7 +250,7 @@
   });
 
   // ── Listado: filtro y paginación en el navegador (sin recargar) ─────────
-  const ALL = <?= json_encode(array_values($usuarios)) ?>;
+  let ALL = <?= json_encode(array_values($usuarios)) ?>;
   const PER_PAGE = 5;
   const BADGE_ROL = { alumno:'badge-accent', profesor:'badge-muted', secretaria:'badge-warning', admin:'badge-danger' };
   const LABEL_ROL = { alumno:'Alumno', profesor:'Profesor', secretaria:'Secretaria', admin:'Admin' };
@@ -270,6 +289,9 @@
           <button type="button" class="btn btn-ghost btn-sm" data-editar="${u.id}" title="Editar usuario">
             <i class="fa-solid fa-pen-to-square"></i>
           </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-borrar="${u.id}" data-nombre="${escU(u.apellido)}, ${escU(u.nombre)}" title="Borrar usuario">
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </td>
       </tr>`;
   }
@@ -285,6 +307,9 @@
 
     tbody.querySelectorAll('[data-editar]').forEach(btn => {
       btn.addEventListener('click', () => abrirEditar(btn.dataset.editar));
+    });
+    tbody.querySelectorAll('[data-borrar]').forEach(btn => {
+      btn.addEventListener('click', () => abrirBorrar(btn.dataset.borrar, btn.dataset.nombre));
     });
 
     renderPaginacionU(inicio, items.length);
@@ -397,6 +422,37 @@
       App.toast('Usuario actualizado.', 'success');
       cerrarEditar();
       render();
+    })
+    .catch(err => App.toast(err.message, 'error'));
+  });
+
+  // ── Borrar usuario ───────────────────────────────────────────────────
+  const modalBorrar = App.qs('#modalBorrar');
+  let borrarId = null;
+
+  function abrirBorrar(id, nombre) {
+    borrarId = id;
+    App.qs('#borrarUsuarioNombre').textContent = nombre;
+    modalBorrar.classList.remove('hidden');
+  }
+
+  function cerrarBorrar() { modalBorrar.classList.add('hidden'); borrarId = null; }
+
+  App.qs('#closeModalBorrar').addEventListener('click', cerrarBorrar);
+  App.qs('#cancelBorrar').addEventListener('click', cerrarBorrar);
+  modalBorrar.addEventListener('click', e => { if (e.target === modalBorrar) cerrarBorrar(); });
+
+  App.qs('#confirmBorrar').addEventListener('click', () => {
+    if (!borrarId) return;
+    App.api('../api/eliminar_usuario.php', {
+      method: 'POST', loader: true,
+      body: JSON.stringify({ id: borrarId }),
+    })
+    .then(() => {
+      ALL = ALL.filter(u => String(u.id) !== String(borrarId));
+      App.toast('Usuario borrado.', 'success');
+      cerrarBorrar();
+      aplicarFiltros();
     })
     .catch(err => App.toast(err.message, 'error'));
   });

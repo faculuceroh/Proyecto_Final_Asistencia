@@ -25,9 +25,16 @@ if (!$stmt->fetch()) {
     exit;
 }
 
-// Baja lógica: desactiva la materia y limpia horarios e inscripciones
-$pdo->prepare("UPDATE materias SET activo = 0 WHERE id = ?")->execute([$materia_id]);
-$pdo->prepare("DELETE FROM materia_horarios WHERE materia_id = ?")->execute([$materia_id]);
-$pdo->prepare("DELETE FROM inscripciones WHERE materia_id = ?")->execute([$materia_id]);
+// Borrado real. clases, materia_horarios, inscripciones, asistencias y
+// qr_tokens cascadean por FK al borrar la materia; qr_sesiones no tiene FK
+// propia y hay que limpiarla a mano para no dejar sesiones huérfanas.
+$pdo->beginTransaction();
+$pdo->prepare(
+    "DELETE qs FROM qr_sesiones qs
+     JOIN clases c ON c.id = qs.clase_id
+     WHERE c.materia_id = ?"
+)->execute([$materia_id]);
+$pdo->prepare("DELETE FROM materias WHERE id = ?")->execute([$materia_id]);
+$pdo->commit();
 
 echo json_encode(['ok' => true]);

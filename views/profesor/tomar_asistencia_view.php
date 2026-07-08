@@ -162,6 +162,10 @@
               QR del aula — los alumnos escanean este código
             </p>
             <div class="qr-box" id="qrContainer"></div>
+            <p style="font-size:0.75rem;color:var(--c-text-soft);text-align:center;margin-top:12px;word-break:break-all">
+              ¿No podés escanear? Pasale este link al alumno: <br>
+              <a id="qrLinkText" href="#" target="_blank" style="color:var(--c-primary)"></a>
+            </p>
           </div>
         </div>
 
@@ -300,12 +304,15 @@
   // ── QR image ──────────────────────────────────────────────
   function renderQR(token) {
     qrContainer.innerHTML = '';
+    const url = BASE_QR + token;
     new QRCode(qrContainer, {
-      text: BASE_QR + token,
+      text: url,
       width: 200, height: 200,
       colorDark: '#0f172a', colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M,
     });
+    const qrLinkText = App.qs('#qrLinkText');
+    if (qrLinkText) { qrLinkText.href = url; qrLinkText.textContent = url; }
     qrCard.classList.remove('hidden');
   }
 

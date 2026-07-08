@@ -22,7 +22,7 @@ $offset     = ($pagina - 1) * $por_pag;
 $clase_detalle = null;
 $alumnos_clase = [];
 $badge_asist   = ['presente'=>'badge-success','tardanza'=>'badge-warning','ausente'=>'badge-danger'];
-$label_asist   = ['presente'=>'Presente','tardanza'=>'Tardanza','ausente'=>'Ausente'];
+$label_asist   = ['presente'=>'Presente','tardanza'=>'Tarde','ausente'=>'Ausente'];
 
 $pagina_alumnos = max(1, (int) ($_GET['pagina_alumnos'] ?? 1));
 $por_pag_alumnos = 10;

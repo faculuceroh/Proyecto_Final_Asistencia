@@ -69,13 +69,29 @@
             <label for="clase_id">Clase virtual</label>
             <?php if (empty($clases_virtuales)): ?>
               <p style="color:var(--c-text-soft);font-size:0.9rem;padding:10px 0">
-                No tenés clases con modalidad virtual asignadas.
+                <?= $clase_preselect
+                  ? 'La clase seleccionada no existe o no te pertenece.'
+                  : 'No tenés clases con modalidad virtual asignadas.' ?>
               </p>
+            <?php elseif ($clase_preselect): ?>
+              <?php $c = $clases_virtuales[0]; ?>
+              <div class="input" style="display:flex;align-items:center;gap:8px;background:var(--c-bg-soft,#f8fafc);cursor:default">
+                <i class="fa-solid fa-lock" style="color:var(--c-text-faint);font-size:0.85rem"></i>
+                <span>
+                  <?= htmlspecialchars($c['materia_nombre']) ?>
+                  · <?= htmlspecialchars($c['curso']) ?>
+                  · <?= date('d/m/Y', strtotime($c['fecha'])) ?>
+                  <?= htmlspecialchars($c['hora_inicio']) ?>
+                  (<?= (int)$c['duracion_min'] ?> min)
+                  — <?= $c['estado'] === 'finalizada' ? 'Cargada (Finalizada)' : htmlspecialchars(ucfirst($c['estado'])) ?>
+                </span>
+              </div>
+              <input type="hidden" name="clase_id" value="<?= (int)$c['id'] ?>" />
             <?php else: ?>
             <select class="input select" id="clase_id" name="clase_id" required>
               <option value="">— Seleccioná una clase —</option>
               <?php foreach ($clases_virtuales as $c): ?>
-              <option value="<?= (int)$c['id'] ?>" <?= $clase_preselect === (int)$c['id'] ? 'selected' : '' ?>>
+              <option value="<?= (int)$c['id'] ?>">
                 <?= htmlspecialchars($c['materia_nombre']) ?>
                 · <?= htmlspecialchars($c['curso']) ?>
                 · <?= date('d/m/Y', strtotime($c['fecha'])) ?>

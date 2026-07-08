@@ -292,7 +292,7 @@
 function estadoBadge(string $estado): string {
     return match($estado) {
         'presente'  => '<span class="badge badge-success">Presente</span>',
-        'tardanza'  => '<span class="badge badge-warning">Tardanza</span>',
+        'tardanza'  => '<span class="badge badge-warning">Tarde</span>',
         'ausente'   => '<span class="badge badge-danger">Ausente</span>',
         default     => '<span class="badge badge-muted">' . htmlspecialchars($estado) . '</span>',
     };

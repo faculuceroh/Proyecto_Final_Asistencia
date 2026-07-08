@@ -330,6 +330,7 @@
                     <button class="btn btn-ghost btn-sm btn-elim-clase"
                             data-clase-id="<?= $c['id'] ?>"
                             data-fecha="<?= date('d/m/Y', strtotime($c['fecha'])) ?>"
+                            data-presentes="<?= $finalizada ? (int)$c['presentes'] + (int)$c['ausentes'] : 0 ?>"
                             title="Eliminar clase" style="color:var(--c-danger)">
                       <i class="fa-solid fa-trash"></i>
                     </button>
@@ -502,7 +503,8 @@
     btn.addEventListener('click', function() {
       const id = this.getAttribute('data-clase-id');
       const fecha = this.getAttribute('data-fecha');
-      confirmarEliminarClase(id, fecha);
+      const presentes = parseInt(this.getAttribute('data-presentes') || '0', 10);
+      confirmarEliminarClase(id, fecha, presentes);
     });
   });
 
@@ -604,9 +606,17 @@
     };
   }
 
-  function confirmarEliminarClase(id, fecha) {
+  function confirmarEliminarClase(id, fecha, presentes) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
+    const avisoAsistencia = presentes > 0
+      ? `<p style="font-size:0.85rem;margin-top:8px;color:var(--c-danger);font-weight:600">
+           <i class="fa-solid fa-triangle-exclamation"></i>
+           Esta clase ya tiene asistencia cargada de ${presentes} alumno(s). Se va a perder para siempre.
+         </p>`
+      : `<p class="text-muted" style="font-size:0.85rem;margin-top:8px">
+           Esta acción borrará la clase de forma permanente.
+         </p>`;
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-head">
@@ -615,9 +625,7 @@
         </div>
         <div class="modal-body" style="margin-top: 16px;">
           <p>¿Estás seguro que querés eliminar la clase del día <strong>${fecha}</strong>?</p>
-          <p class="text-muted" style="font-size:0.85rem;margin-top:8px">
-            Esta acción borrará la clase y todas las asistencias asociadas de forma permanente.
-          </p>
+          ${avisoAsistencia}
         </div>
         <div class="modal-foot" style="margin-top: 24px; display: flex; gap: 8px;">
           <button class="btn btn-ghost" id="cancelarElim" style="flex:1">Cancelar</button>

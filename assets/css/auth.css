@@ -347,22 +347,18 @@
 .section-alt .team-card { background: var(--c-bg); }
 .team-card:hover { transform: translateY(-4px); box-shadow: var(--sh-md); }
 .team-photo {
-  width: 104px;
-  height: 104px;
+  display: block;
+  width: 132px;
+  height: 132px;
   margin: 0 auto 16px;
   border-radius: var(--r-full);
   object-fit: cover;
+  object-position: center;
   border: 3px solid var(--c-surface);
   box-shadow: var(--sh-md);
   background: var(--c-muted-soft);
 }
-.team-card h3 { font-size: 1.05rem; margin-bottom: 3px; }
-.team-card .role {
-  color: var(--c-accent-dark);
-  font-size: 0.86rem;
-  font-weight: 600;
-  margin-bottom: 14px;
-}
+.team-card h3 { font-size: 1.05rem; margin-bottom: 16px; }
 .team-linkedin {
   display: inline-flex;
   align-items: center;

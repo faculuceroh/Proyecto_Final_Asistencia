@@ -9,17 +9,24 @@ class Asistencia extends BaseModel {
         $db = self::db();
         
         $prom = $db->prepare(
-            "SELECT ROUND(SUM(estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1)
-             FROM asistencias WHERE alumno_id = ?"
+            "SELECT ROUND(SUM(a.estado IN ('presente','tardanza'))/NULLIF(COUNT(*),0)*100,1)
+             FROM asistencias a JOIN clases c ON c.id = a.clase_id AND c.estado = 'finalizada'
+             WHERE a.alumno_id = ?"
         );
         $prom->execute([$alumno_id]);
         $pct_global = $prom->fetchColumn() ?? 0;
 
-        $stmt = $db->prepare("SELECT COUNT(*) FROM asistencias WHERE alumno_id = ? AND estado IN ('presente','tardanza')");
+        $stmt = $db->prepare(
+            "SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id AND c.estado = 'finalizada'
+             WHERE a.alumno_id = ? AND a.estado IN ('presente','tardanza')"
+        );
         $stmt->execute([$alumno_id]);
         $presentes = (int) $stmt->fetchColumn();
 
-        $stmt = $db->prepare("SELECT COUNT(*) FROM asistencias WHERE alumno_id = ? AND estado = 'ausente'");
+        $stmt = $db->prepare(
+            "SELECT COUNT(*) FROM asistencias a JOIN clases c ON c.id = a.clase_id AND c.estado = 'finalizada'
+             WHERE a.alumno_id = ? AND a.estado = 'ausente'"
+        );
         $stmt->execute([$alumno_id]);
         $ausentes = (int) $stmt->fetchColumn();
 
@@ -45,7 +52,7 @@ class Asistencia extends BaseModel {
              JOIN clases c ON c.id = a.clase_id
              JOIN materias m ON m.id = c.materia_id
              LEFT JOIN usuarios u ON u.id = m.profesor_id
-             WHERE a.alumno_id = ?
+             WHERE a.alumno_id = ? AND c.estado = 'finalizada'
              ORDER BY c.fecha DESC, a.updated_at DESC
              LIMIT ?"
         );
@@ -94,37 +101,5 @@ class Asistencia extends BaseModel {
         );
         $stmt->execute([$alumno_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Busca un registro de asistencia por alumno y clase.
-     */
-    public static function findRegistro($alumno_id, $clase_id) {
-        $stmt = self::db()->prepare(
-            'SELECT id, hora_entrada, hora_salida, estado FROM asistencias WHERE alumno_id = ? AND clase_id = ? LIMIT 1'
-        );
-        $stmt->execute([$alumno_id, $clase_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Registra o actualiza la asistencia (entrada/salida).
-     */
-    public static function registrarEntrada($alumno_id, $clase_id, $estado, $hora_entrada) {
-        $stmt = self::db()->prepare(
-            'INSERT INTO asistencias (alumno_id, clase_id, estado, hora_entrada, updated_at)
-             VALUES (?, ?, ?, ?, NOW())'
-        );
-        return $stmt->execute([$alumno_id, $clase_id, $estado, $hora_entrada]);
-    }
-
-    /**
-     * Registra la salida en una asistencia existente.
-     */
-    public static function registrarSalida($alumno_id, $clase_id, $hora_salida) {
-        $stmt = self::db()->prepare(
-            'UPDATE asistencias SET hora_salida = ?, updated_at = NOW() WHERE alumno_id = ? AND clase_id = ?'
-        );
-        return $stmt->execute([$hora_salida, $alumno_id, $clase_id]);
     }
 }

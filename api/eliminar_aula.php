@@ -13,6 +13,11 @@ if (!$aula_id) {
 }
 
 $pdo = getPDO();
-$pdo->prepare('UPDATE aulas SET activo = 0 WHERE id = ?')->execute([$aula_id]);
+
+$pdo->beginTransaction();
+// Las sesiones de QR de esta aula quedan huérfanas (no tienen FK propia), se limpian antes.
+$pdo->prepare('DELETE FROM qr_sesiones WHERE aula_id = ?')->execute([$aula_id]);
+$pdo->prepare('DELETE FROM aulas WHERE id = ?')->execute([$aula_id]);
+$pdo->commit();
 
 echo json_encode(['ok' => true]);

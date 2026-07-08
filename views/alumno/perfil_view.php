@@ -22,7 +22,6 @@
       <a href="dashboard.php"><i class="fa-solid fa-house"></i> Inicio</a>
       <a href="materias.php"><i class="fa-solid fa-book"></i> Mis materias</a>
       <a href="escanear.php"><i class="fa-solid fa-qrcode"></i> Escanear QR</a>
-      <a href="historial.php"><i class="fa-solid fa-clock-rotate-left"></i> Mi asistencia</a>
       <span class="nav-label">Cuenta</span>
       <a href="perfil.php" class="active"><i class="fa-solid fa-user"></i> Mi perfil</a>
       <a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>

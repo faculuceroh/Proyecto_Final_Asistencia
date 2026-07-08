@@ -65,37 +65,33 @@
       <div class="team-grid">
         <!-- Integrante 1 -->
         <article class="team-card">
-          <img class="team-photo" src="assets/img/team/integrante1.jpg" alt="Foto de integrante 1" />
-          <h3>Nombre Apellido</h3>
-          <p class="role">Rol en el proyecto</p>
-          <a class="team-linkedin" href="https://www.linkedin.com/in/usuario1" target="_blank" rel="noopener">
+          <img class="team-photo" src="assets/img/team/yoel.jpg" alt="Foto de Yoel Arequipa" />
+          <h3>Arequipa Yoel</h3>
+          <a class="team-linkedin" href="https://www.linkedin.com/in/yoelarequipa/" target="_blank" rel="noopener">
             <i class="fa-brands fa-linkedin-in"></i> LinkedIn
           </a>
         </article>
         <!-- Integrante 2 -->
         <article class="team-card">
-          <img class="team-photo" src="assets/img/team/integrante2.jpg" alt="Foto de integrante 2" />
-          <h3>Nombre Apellido</h3>
-          <p class="role">Rol en el proyecto</p>
-          <a class="team-linkedin" href="https://www.linkedin.com/in/usuario2" target="_blank" rel="noopener">
+          <img class="team-photo" src="assets/img/team/facundo.jpg" alt="Foto de Facundo Lucero" />
+          <h3>Lucero Facundo</h3>
+          <a class="team-linkedin" href="https://www.linkedin.com/in/facundo-lucero-ab0921269/" target="_blank" rel="noopener">
             <i class="fa-brands fa-linkedin-in"></i> LinkedIn
           </a>
         </article>
         <!-- Integrante 3 -->
         <article class="team-card">
-          <img class="team-photo" src="assets/img/team/integrante3.jpg" alt="Foto de integrante 3" />
-          <h3>Nombre Apellido</h3>
-          <p class="role">Rol en el proyecto</p>
-          <a class="team-linkedin" href="https://www.linkedin.com/in/usuario3" target="_blank" rel="noopener">
+          <img class="team-photo" src="assets/img/team/javier.jpg" alt="Foto de Javier Rios" />
+          <h3>Rios Javier</h3>
+          <a class="team-linkedin" href="https://www.linkedin.com/in/javier1519" target="_blank" rel="noopener">
             <i class="fa-brands fa-linkedin-in"></i> LinkedIn
           </a>
         </article>
         <!-- Integrante 4 -->
         <article class="team-card">
-          <img class="team-photo" src="assets/img/team/integrante4.jpg" alt="Foto de integrante 4" />
-          <h3>Nombre Apellido</h3>
-          <p class="role">Rol en el proyecto</p>
-          <a class="team-linkedin" href="https://www.linkedin.com/in/usuario4" target="_blank" rel="noopener">
+          <img class="team-photo" src="assets/img/team/juan.jpg" alt="Foto de Juan Widmer" />
+          <h3>Widmer Juan</h3>
+          <a class="team-linkedin" href="https://www.linkedin.com/in/juan-widmer-0a017124a/" target="_blank" rel="noopener">
             <i class="fa-brands fa-linkedin-in"></i> LinkedIn
           </a>
         </article>

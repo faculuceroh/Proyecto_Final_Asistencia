@@ -49,48 +49,6 @@ class Usuario extends BaseModel {
     }
 
     /**
-     * Obtiene el listado de usuarios paginado y con filtros opcionales.
-     */
-    public static function getPaginated($buscar, $por_pagina, $offset, $activo = 1) {
-        $db = self::db();
-        if ($buscar) {
-            $like = '%' . $buscar . '%';
-            $stmt = $db->prepare(
-                "SELECT id, legajo, nombre, apellido, rol, curso FROM usuarios
-                 WHERE (nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?) AND activo = ?
-                 ORDER BY apellido, nombre LIMIT ? OFFSET ?"
-            );
-            $stmt->execute([$like, $like, $like, $activo, $por_pagina, $offset]);
-        } else {
-            $stmt = $db->prepare(
-                "SELECT id, legajo, nombre, apellido, rol, curso FROM usuarios
-                 WHERE activo = ? ORDER BY created_at DESC LIMIT ? OFFSET ?"
-            );
-            $stmt->execute([$activo, $por_pagina, $offset]);
-        }
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Obtiene la cantidad total de usuarios que coinciden con la búsqueda.
-     */
-    public static function getCount($buscar = '', $activo = 1) {
-        $db = self::db();
-        if ($buscar) {
-            $like = '%' . $buscar . '%';
-            $stmt = $db->prepare(
-                "SELECT COUNT(*) FROM usuarios WHERE (nombre LIKE ? OR apellido LIKE ? OR legajo LIKE ?) AND activo = ?"
-            );
-            $stmt->execute([$like, $like, $like, $activo]);
-            return (int) $stmt->fetchColumn();
-        } else {
-            $stmt = $db->prepare("SELECT COUNT(*) FROM usuarios WHERE activo = ?");
-            $stmt->execute([$activo]);
-            return (int) $stmt->fetchColumn();
-        }
-    }
-
-    /**
      * Crea un nuevo usuario.
      */
     public static function create($legajo, $nombre, $apellido, $email, $password, $rol, $curso = null, $activo = 1) {
@@ -114,36 +72,11 @@ class Usuario extends BaseModel {
     }
 
     /**
-     * Actualiza la contraseña de un usuario.
-     */
-    public static function updatePassword($id, $newPassword) {
-        $hash = password_hash($newPassword, PASSWORD_BCRYPT);
-        $stmt = self::db()->prepare('UPDATE usuarios SET password = ? WHERE id = ?');
-        return $stmt->execute([$hash, $id]);
-    }
-
-    /**
      * Actualiza el nombre de archivo de la foto de perfil (o lo limpia con null).
      */
     public static function updateFoto($id, $foto) {
         $stmt = self::db()->prepare('UPDATE usuarios SET foto = ? WHERE id = ?');
         return $stmt->execute([$foto, $id]);
-    }
-
-    /**
-     * Actualiza el token de recuperación de contraseña de un usuario.
-     */
-    public static function setRecoveryToken($id, $token, $expira) {
-        $stmt = self::db()->prepare('UPDATE usuarios SET token_recuperacion = ?, token_expira = ? WHERE id = ?');
-        return $stmt->execute([$token, $expira, $id]);
-    }
-
-    /**
-     * Limpia el token de recuperación de contraseña de un usuario.
-     */
-    public static function clearRecoveryToken($id) {
-        $stmt = self::db()->prepare('UPDATE usuarios SET token_recuperacion = NULL, token_expira = NULL WHERE id = ?');
-        return $stmt->execute([$id]);
     }
 
     /**

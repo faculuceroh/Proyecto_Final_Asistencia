@@ -66,6 +66,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
   <script src="../assets/js/utils.js"></script>
-  <script src="../assets/js/qr-scanner.js"></script> 
+  <script src="../assets/js/qr-scanner.js?v=<?= filemtime(__DIR__ . '/../../assets/js/qr-scanner.js') ?>"></script>
 </body>
 </html>

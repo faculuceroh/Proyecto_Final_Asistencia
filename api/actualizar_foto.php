@@ -54,47 +54,64 @@ if ($info === false || !isset($TIPOS_PERMITIDOS[$info[2]])) {
     exit;
 }
 
-$tipo = $info[2];
-$src = match ($tipo) {
-    IMAGETYPE_JPEG => imagecreatefromjpeg($archivo['tmp_name']),
-    IMAGETYPE_PNG  => imagecreatefrompng($archivo['tmp_name']),
-    IMAGETYPE_WEBP => imagecreatefromwebp($archivo['tmp_name']),
-};
-
-if (!$src) {
-    http_response_code(422);
-    echo json_encode(['message' => 'No se pudo procesar la imagen']);
-    exit;
-}
-
-// Recorte centrado a cuadrado + resize a tamaño fijo (avatar consistente y liviano)
-$srcW = imagesx($src);
-$srcH = imagesy($src);
-$srcSize = min($srcW, $srcH);
-$srcX = (int) (($srcW - $srcSize) / 2);
-$srcY = (int) (($srcH - $srcSize) / 2);
-
-$dst = imagecreatetruecolor(TAMANO_AVATAR, TAMANO_AVATAR);
-imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // fondo blanco (aplana transparencia)
-imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, TAMANO_AVATAR, TAMANO_AVATAR, $srcSize, $srcSize);
-imagedestroy($src);
-
-$usuario_id  = $_SESSION['usuario_id'];
-$nombreNuevo = 'u' . $usuario_id . '_' . time() . '.jpg';
-$dirDestino  = __DIR__ . '/../assets/uploads/perfiles/';
-$rutaDestino = $dirDestino . $nombreNuevo;
+$tipo       = $info[2];
+$usuario_id = $_SESSION['usuario_id'];
+$dirDestino = __DIR__ . '/../assets/uploads/perfiles/';
 
 if (!is_dir($dirDestino)) {
     mkdir($dirDestino, 0755, true);
 }
 
-if (!imagejpeg($dst, $rutaDestino, 85)) {
+if (extension_loaded('gd')) {
+    // Recorte centrado a cuadrado + resize a tamaño fijo (avatar consistente y liviano)
+    $src = match ($tipo) {
+        IMAGETYPE_JPEG => imagecreatefromjpeg($archivo['tmp_name']),
+        IMAGETYPE_PNG  => imagecreatefrompng($archivo['tmp_name']),
+        IMAGETYPE_WEBP => imagecreatefromwebp($archivo['tmp_name']),
+    };
+
+    if (!$src) {
+        http_response_code(422);
+        echo json_encode(['message' => 'No se pudo procesar la imagen']);
+        exit;
+    }
+
+    $srcW = imagesx($src);
+    $srcH = imagesy($src);
+    $srcSize = min($srcW, $srcH);
+    $srcX = (int) (($srcW - $srcSize) / 2);
+    $srcY = (int) (($srcH - $srcSize) / 2);
+
+    $dst = imagecreatetruecolor(TAMANO_AVATAR, TAMANO_AVATAR);
+    imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // fondo blanco (aplana transparencia)
+    imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, TAMANO_AVATAR, TAMANO_AVATAR, $srcSize, $srcSize);
+    imagedestroy($src);
+
+    $nombreNuevo = 'u' . $usuario_id . '_' . time() . '.jpg';
+    $rutaDestino = $dirDestino . $nombreNuevo;
+
+    if (!imagejpeg($dst, $rutaDestino, 85)) {
+        imagedestroy($dst);
+        http_response_code(500);
+        echo json_encode(['message' => 'No se pudo guardar la foto']);
+        exit;
+    }
     imagedestroy($dst);
-    http_response_code(500);
-    echo json_encode(['message' => 'No se pudo guardar la foto']);
-    exit;
+} else {
+    // Sin la extensión GD (no habilitada en este XAMPP): se guarda el archivo
+    // tal cual llegó, sin recorte ni reencodeo. El avatar se ve igual de bien
+    // gracias al CSS (object-fit: cover); solo se pierde la optimización de
+    // peso y el recorte cuadrado automático. La extensión real ya se validó
+    // arriba con getimagesize(), no se confía en la que mandó el navegador.
+    $nombreNuevo = 'u' . $usuario_id . '_' . time() . '.' . $TIPOS_PERMITIDOS[$tipo];
+    $rutaDestino = $dirDestino . $nombreNuevo;
+
+    if (!move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
+        http_response_code(500);
+        echo json_encode(['message' => 'No se pudo guardar la foto']);
+        exit;
+    }
 }
-imagedestroy($dst);
 
 // Borra la foto anterior (si había) y guarda la nueva
 $stmt = getPDO()->prepare('SELECT foto FROM usuarios WHERE id = ? LIMIT 1');

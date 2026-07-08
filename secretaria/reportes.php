@@ -23,7 +23,7 @@ if ($f_materia) {
         SELECT COUNT(*)
         FROM asistencias a
         JOIN clases c ON c.id = a.clase_id
-        WHERE c.materia_id = ? AND a.estado IN ('presente','tardanza')
+        WHERE c.materia_id = ? AND c.fecha <= CURDATE() AND a.estado IN ('presente','tardanza')
     ");
     $stmt_pres->execute([$f_materia]);
     $total_pres = (int) $stmt_pres->fetchColumn();
@@ -32,7 +32,7 @@ if ($f_materia) {
         SELECT COUNT(*)
         FROM asistencias a
         JOIN clases c ON c.id = a.clase_id
-        WHERE c.materia_id = ? AND a.estado = 'ausente'
+        WHERE c.materia_id = ? AND c.fecha <= CURDATE() AND a.estado = 'ausente'
     ");
     $stmt_aus->execute([$f_materia]);
     $total_aus = (int) $stmt_aus->fetchColumn();

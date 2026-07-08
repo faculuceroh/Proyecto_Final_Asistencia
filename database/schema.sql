@@ -49,6 +49,8 @@ CREATE TABLE usuarios (
   curso      VARCHAR(20)  NULL,                   -- solo alumnos, ej: "1° B"
   foto       VARCHAR(255) NULL,                   -- nombre de archivo en assets/uploads/perfiles/
   activo     TINYINT(1)   NOT NULL DEFAULT 1,
+  intentos_fallidos TINYINT UNSIGNED NOT NULL DEFAULT 0,  -- login: intentos consecutivos fallidos
+  bloqueado_hasta   DATETIME NULL DEFAULT NULL,           -- login: bloqueado hasta esta fecha/hora
   created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

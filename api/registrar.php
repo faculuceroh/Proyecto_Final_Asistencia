@@ -1,10 +1,11 @@
 <?php
 /*
  * api/registrar.php — Registra la asistencia del alumno (POST)
- * Body JSON: { aula_token: "..." }
+ * Body JSON: { aula_token: "...", lat: 0.0, lon: 0.0 }
  */
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../config/config_geo.php';
 require_auth(['alumno']);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,9 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $body       = json_decode(file_get_contents('php://input'), true) ?? [];
 $aula_token = trim($body['aula_token'] ?? '');
+$lat        = isset($body['lat']) ? floatval($body['lat']) : 0.0;
+$lon        = isset($body['lon']) ? floatval($body['lon']) : 0.0;
 
 if (!$aula_token) {
     http_response_code(400); echo json_encode(['message' => 'Token de aula no recibido']); exit;
+}
+
+if ($lat === 0.0 || $lon === 0.0) {
+    http_response_code(400); echo json_encode(['message' => 'No se recibió tu ubicación GPS']); exit;
+}
+
+$distancia = calcularDistancia(UTN_LATITUD, UTN_LONGITUD, $lat, $lon);
+if ($distancia > RANGO_MAXIMO_METROS) {
+    http_response_code(403);
+    echo json_encode(['message' => 'Estás fuera del rango permitido para registrar asistencia (distancia: ' . round($distancia) . ' m).']);
+    exit;
 }
 
 $alumno_id = $_SESSION['usuario_id'];

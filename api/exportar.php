@@ -25,13 +25,19 @@ $pdo = getPDO();
 
 // ── Modo: exportar historial de una materia ───────────────────
 if ($materia_id && !$clase_id) {
-    $stmt = $pdo->prepare('SELECT nombre, curso FROM materias WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT nombre, curso, profesor_id, profesor_2_id FROM materias WHERE id = ? LIMIT 1');
     $stmt->execute([$materia_id]);
     $mat = $stmt->fetch();
     if (!$mat) {
         http_response_code(404);
         header('Content-Type: application/json');
         echo json_encode(['message' => 'Materia no encontrada']);
+        exit;
+    }
+    if ($_SESSION['rol'] === 'profesor' && $_SESSION['usuario_id'] != $mat['profesor_id'] && $_SESSION['usuario_id'] != $mat['profesor_2_id']) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['message' => 'No tenés permiso para exportar esta materia']);
         exit;
     }
 
@@ -77,7 +83,7 @@ if ($materia_id && !$clase_id) {
 
 // ── Modo: exportar una clase específica ──────────────────────
 $stmt = $pdo->prepare(
-    'SELECT m.nombre AS materia, m.curso, c.fecha
+    'SELECT m.nombre AS materia, m.curso, c.fecha, m.profesor_id, m.profesor_2_id
      FROM clases c JOIN materias m ON m.id = c.materia_id
      WHERE c.id = ? LIMIT 1'
 );
@@ -88,6 +94,12 @@ if (!$clase) {
     http_response_code(404);
     header('Content-Type: application/json');
     echo json_encode(['message' => 'Clase no encontrada']);
+    exit;
+}
+if ($_SESSION['rol'] === 'profesor' && $_SESSION['usuario_id'] != $clase['profesor_id'] && $_SESSION['usuario_id'] != $clase['profesor_2_id']) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode(['message' => 'No tenés permiso para exportar esta clase']);
     exit;
 }
 

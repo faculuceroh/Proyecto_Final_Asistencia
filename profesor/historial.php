@@ -19,7 +19,7 @@ $badge_estado = [
     'finalizada' => ['badge-success',  'Finalizada'],
 ];
 $badge_asist = ['presente'=>'badge-success','tardanza'=>'badge-warning','ausente'=>'badge-danger'];
-$label_asist = ['presente'=>'Presente','tardanza'=>'Tardanza','ausente'=>'Ausente'];
+$label_asist = ['presente'=>'Presente','tardanza'=>'Tarde','ausente'=>'Ausente'];
 
 $pdo = getPDO();
 
@@ -41,7 +41,7 @@ if ($materia_id && $clase_id) {
     // Alumnos inscriptos + alumnos con asistencia registrada (ej. importados desde Teams
     // que no estaban en inscripciones). Se usa UNION para no perder ninguno de los dos grupos.
     $stmt = $pdo->prepare(
-        "SELECT u.apellido, u.nombre, u.legajo,
+        "SELECT u.apellido, u.nombre, u.legajo, u.foto,
                 COALESCE(a.estado, 'ausente') AS estado,
                 TIME_FORMAT(a.hora_entrada, '%H:%i') AS hora_entrada,
                 (i.alumno_id IS NULL) AS no_inscripto
@@ -73,13 +73,23 @@ elseif ($materia_id) {
         exit;
     }
 
+    // "inscriptos" cuenta inscriptos actuales de la materia UNIDO a quienes ya
+    // tengan asistencia registrada en esa clase puntual (ej. alumnos importados
+    // desde Teams que no están inscriptos), igual que la vista detalle de clase.
+    // Si no se hace así, "presentes" puede incluir gente que "inscriptos" no
+    // cuenta y el % da más de 100.
     $stmt = $pdo->prepare(
         "SELECT c.id, c.fecha, c.hora_inicio, c.duracion_min, c.estado,
-                 (SELECT COUNT(*) FROM inscripciones WHERE materia_id = c.materia_id) AS inscriptos,
+                 (SELECT COUNT(*) FROM inscripciones WHERE materia_id = c.materia_id)
+                 +
+                 (SELECT COUNT(*) FROM asistencias a2
+                   WHERE a2.clase_id = c.id
+                     AND a2.alumno_id NOT IN (
+                       SELECT alumno_id FROM inscripciones WHERE materia_id = c.materia_id
+                     )
+                 ) AS inscriptos,
                  COALESCE(SUM(a.estado IN ('presente','tardanza')), 0) AS presentes,
-                 COALESCE(SUM(a.estado = 'ausente'), 0) AS ausentes,
-                 ROUND(SUM(a.estado IN ('presente','tardanza')) /
-                       NULLIF((SELECT COUNT(*) FROM inscripciones WHERE materia_id = c.materia_id), 0) * 100, 1) AS pct
+                 COALESCE(SUM(a.estado = 'ausente'), 0) AS ausentes
           FROM clases c
           LEFT JOIN asistencias a ON a.clase_id = c.id
           WHERE c.materia_id = ? AND c.fecha <= CURDATE()
@@ -88,6 +98,10 @@ elseif ($materia_id) {
     );
     $stmt->execute([$materia_id]);
     $clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($clases as &$c) {
+        $c['pct'] = $c['inscriptos'] ? round($c['presentes'] / $c['inscriptos'] * 100, 1) : 0;
+    }
+    unset($c);
 
     $finalizadas = array_filter($clases, fn($c) => $c['estado'] === 'finalizada');
     $total_fin   = count($finalizadas);

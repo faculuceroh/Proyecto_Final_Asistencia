@@ -19,8 +19,10 @@ $legajo   = trim($body['legajo']   ?? '');
 $curso    = trim($body['curso']    ?? '');
 $email    = trim($body['email']    ?? '') ?: null;
 
-// Validaciones
-$roles_validos = ['alumno', 'profesor', 'secretaria', 'admin'];
+// Validaciones. Secretaría no puede dar de alta administradores.
+$roles_validos = $_SESSION['rol'] === 'admin'
+    ? ['alumno', 'profesor', 'secretaria', 'admin']
+    : ['alumno', 'profesor', 'secretaria'];
 if (!in_array($tipo, $roles_validos, true)) {
     http_response_code(400);
     echo json_encode(['message' => 'Tipo de usuario inválido']);

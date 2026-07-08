@@ -65,16 +65,6 @@
                    style="max-width:120px" />
           </div>
 
-          <div class="field" style="margin-top:20px">
-            <label>Tiempo de rotaci&oacute;n del QR (segundos)</label>
-            <p class="text-muted" style="font-size:0.83rem;margin-bottom:8px">
-              Cada cu&aacute;ntos segundos rota el token del QR din&aacute;mico (si se usa el sistema antiguo).
-            </p>
-            <input class="input" type="number" name="qr_rotacion_segundos" min="10" max="300"
-                   value="<?= htmlspecialchars($config['qr_rotacion_segundos'] ?? '30') ?>"
-                   style="max-width:120px" />
-          </div>
-
           <div style="margin-top:28px;display:flex;gap:12px">
             <button type="submit" class="btn btn-primary">
               <i class="fa-solid fa-floppy-disk"></i> Guardar cambios

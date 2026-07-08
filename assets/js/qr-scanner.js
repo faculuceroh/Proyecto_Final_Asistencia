@@ -32,9 +32,7 @@
 
   // Parámetros de URL si se abrió con escáner nativo
   const params = new URLSearchParams(location.search);
-  const qrClase = params.get('clase');
-  const qrToken = params.get('t');
-  const qrTipo = params.get('tipo') || 'entrada';
+  const qrAula = params.get('aula');
 
   /* ---------- Mostrar vistas ---------- */
   function show(view) {
@@ -92,12 +90,8 @@
             userCoords = { lat: latActual, lon: lonActual };
 
             // Si el QR ya vino en la URL (escaneo directo con cámara nativa)
-            if (qrClase && qrToken) {
-              registrar({
-                clase: qrClase,
-                tipo: qrTipo,
-                token: qrToken,
-              });
+            if (qrAula) {
+              registrar({ aula: qrAula });
             } else {
               // Sino, mostramos el prompt para que elija abrir la cámara en la app
               show(promptView);
@@ -202,25 +196,21 @@
     scanning = false;
     stopCamera();
     const data = parsePayload(text);
-    if (!data.clase || !data.token) {
+    if (!data.aula) {
       return showError('El código escaneado no es un QR de asistencia válido.', true);
     }
     registrar(data);
   }
 
-  /** Extrae clase/tipo/token de la URL (o texto) del QR. */
+  /** Extrae el token del aula de la URL (o texto) del QR. */
   function parsePayload(text) {
     try {
       const u = new URL(text);
-      return {
-        clase: u.searchParams.get('clase'),
-        tipo: u.searchParams.get('tipo') || 'entrada',
-        token: u.searchParams.get('t'),
-      };
+      return { aula: u.searchParams.get('aula') };
     } catch (_) {
       // Fallback: "clave=valor" separado por & sin URL completa
       const p = new URLSearchParams(text.replace(/^[^?]*\??/, ''));
-      return { clase: p.get('clase'), tipo: p.get('tipo') || 'entrada', token: p.get('t') };
+      return { aula: p.get('aula') };
     }
   }
 
@@ -241,21 +231,21 @@
       return;
     }
 
-    const esSalida = (data.tipo || 'entrada').toLowerCase() === 'salida';
     show(resultView);
     resultView.className = 'scan-result';
     resultView.innerHTML = '<div class="spinner spinner-lg" style="margin:30px auto"></div><p>Registrando asistencia…</p>';
 
     // Demo (sin backend): registra siempre OK.
     if (!registrarUrl) {
-      setTimeout(() => showSuccess(esSalida), 700);
+      setTimeout(() => showSuccess(false), 700);
       return;
     }
     try {
       const res = await App.api(registrarUrl, {
         method: 'POST',
-        body: JSON.stringify({ clase_id: data.clase, token: data.token, tipo: data.tipo }),
+        body: JSON.stringify({ aula_token: data.aula, lat: userCoords.lat, lon: userCoords.lon }),
       });
+      const esSalida = (res.tipo || 'entrada').toLowerCase() === 'salida';
       showSuccess(esSalida, res.hora);
     } catch (err) {
       showError(err.message, false);
@@ -296,7 +286,7 @@
   /* ---------- Eventos ---------- */
   if (startBtn) startBtn.addEventListener('click', startCamera);
   if (cancelBtn) cancelBtn.addEventListener('click', () => { stopCamera(); show(promptView); });
-  if (demoBtn) demoBtn.addEventListener('click', () => registrar({ clase: '1', tipo: 'entrada', token: 'demo' }));
+  if (demoBtn) demoBtn.addEventListener('click', () => registrar({ aula: 'demo' }));
 
   // Libera la cámara si se cierra/oculta la pestaña
   window.addEventListener('pagehide', stopCamera);

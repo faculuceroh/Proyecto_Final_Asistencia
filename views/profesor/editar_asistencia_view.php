@@ -88,7 +88,7 @@
           <span><strong id="selCount">0</strong> seleccionados</span>
           <select class="select" id="bulkEstado" style="min-width:130px">
             <option value="presente">Presente</option>
-            <option value="tardanza">Tardanza</option>
+            <option value="tardanza">Tarde</option>
             <option value="ausente">Ausente</option>
           </select>
           <button class="btn btn-ghost btn-sm" id="btnCancelarSeleccion">Cancelar selección</button>
@@ -140,7 +140,7 @@ const ESTADO_BADGE = {
 };
 const ESTADO_LABEL = {
   presente: 'Presente',
-  tardanza: 'Tardanza',
+  tardanza: 'Tarde',
   ausente:  'Ausente',
 };
 

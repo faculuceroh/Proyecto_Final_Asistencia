@@ -15,13 +15,18 @@ if (!$clase_id) {
 
 $pdo = getPDO();
 
-// Verifica que la clase exista y no esté ya finalizada
-$stmt = $pdo->prepare('SELECT estado, materia_id FROM clases WHERE id = ? LIMIT 1');
-$stmt->execute([$clase_id]);
+// Verifica que la clase exista, pertenezca a este profesor y no esté ya finalizada
+$stmt = $pdo->prepare(
+    'SELECT c.estado, c.materia_id FROM clases c
+     JOIN materias m ON m.id = c.materia_id
+     WHERE c.id = ? AND (m.profesor_id = ? OR m.profesor_2_id = ?)
+     LIMIT 1'
+);
+$stmt->execute([$clase_id, $prof_id, $prof_id]);
 $clase = $stmt->fetch();
 
 if (!$clase) {
-    http_response_code(404); echo json_encode(['message' => 'Clase no encontrada']); exit;
+    http_response_code(404); echo json_encode(['message' => 'Clase no encontrada o no te pertenece']); exit;
 }
 if ($clase['estado'] === 'finalizada') {
     echo json_encode(['ok' => true, 'finalizada' => true, 'ausentes' => 0]);

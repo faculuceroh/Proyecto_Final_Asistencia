@@ -177,7 +177,7 @@
   background-repeat: repeat;
   background-size: 170px auto;
   transform: rotate(-20deg);
-  opacity: 0.06;
+  opacity: 0.11;
   pointer-events: none;
   z-index: 0;
 }
@@ -325,6 +325,9 @@
   width: 30px; height: 30px; border-radius: 50%;
   background: #e6e9f2; color: var(--c-primary);
   display: grid; place-items: center; font-size: 0.74rem; font-weight: 700; flex-shrink: 0;
+}
+.data-table img.mini-avatar {
+  object-fit: cover;
 }
 
 /* ---------- Switch (activar/desactivar) ---------- */
